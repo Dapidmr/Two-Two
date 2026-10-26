@@ -12,4 +12,4 @@ public class SceneLoader : MonoBehaviour
     {
         SceneManager.LoadScene("Assets/Scenes/CharacterB/Room-999.unity");
     }
-}
+}   
