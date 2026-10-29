@@ -19,6 +19,9 @@ public class Bookshelf : MonoBehaviour
     public MonoBehaviour playerController;  // script gerak player, dimatikan saat zoom
     public Renderer[] playerRenderers;      // mesh player yang disembunyikan saat zoom
 
+    [Header("Keluar dari zoom")]
+    public bool allowExit = true;           // false = pemain tidak bisa keluar (diatur script lain, misal RadioTuner)
+
     private bool playerInRange = false;
     private bool isZoomed = false;
     private bool returning = false;
@@ -67,7 +70,7 @@ public class Bookshelf : MonoBehaviour
 
         if (!isZoomed && playerInRange && ePressed)
             EnterZoom();
-        else if (isZoomed && (ePressed || escPressed))
+        else if (isZoomed && allowExit && (ePressed || escPressed))
             ExitZoom();
 
         // Kamera hanya digerakkan saat zoom masuk atau keluar
