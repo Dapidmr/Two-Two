@@ -21,6 +21,17 @@ public class Bookshelf : MonoBehaviour
 
     [Header("Keluar dari zoom")]
     public bool allowExit = true;           // false = pemain tidak bisa keluar (diatur script lain, misal RadioTuner)
+    
+    [Header("Pan (drag mouse saat zoom)")]
+    public Vector2 panLimit = new Vector2(0.5f, 0.3f); // batas geser (x = kiri-kanan, y = atas-bawah), satuan unit world
+    public float dragSpeed = 0.002f;                   // unit world per pixel drag
+    public float dragThreshold = 5f;                   // jarak minimal (pixel) sebelum dianggap drag, bukan klik
+    public float panLimitX = 0.5f;       // batas geser kiri-kanan
+    public float panLimitUp = 0.3f;      // batas kamera naik
+    public float panLimitDown = 1.5f;    // batas kamera turun (lebih jauh)
+    public float forwardAtBottom = 0.5f;  // seberapa jauh kamera maju saat sudah di batas bawah
+    public bool IsDragging => isDragging;              // bisa dibaca script buku untuk membedakan klik vs drag
+
 
     private bool playerInRange = false;
     private bool isZoomed = false;
@@ -29,6 +40,9 @@ public class Bookshelf : MonoBehaviour
     private Transform cam;
     private Vector3 camOriginalPos;
     private Quaternion camOriginalRot;
+    private Vector2 panOffset = Vector2.zero;
+    private Vector2 pressStartPos;
+    private bool isDragging = false;
 
     void Start()
     {
@@ -76,7 +90,38 @@ public class Bookshelf : MonoBehaviour
         // Kamera hanya digerakkan saat zoom masuk atau keluar
         if (isZoomed)
         {
-            cam.position = Vector3.Lerp(cam.position, zoomPoint.position, Time.deltaTime * cameraSpeed);
+            // Drag dengan klik kiri ditahan
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                pressStartPos = Mouse.current.position.ReadValue();
+                isDragging = false;
+            }
+
+            if (Mouse.current.leftButton.isPressed)
+            {
+                Vector2 mousePos = Mouse.current.position.ReadValue();
+                if (!isDragging && Vector2.Distance(mousePos, pressStartPos) > dragThreshold)
+                    isDragging = true;
+
+                if (isDragging)
+                {
+                    Vector2 delta = Mouse.current.delta.ReadValue();
+                    panOffset -= delta * dragSpeed;
+                    panOffset.x = Mathf.Clamp(panOffset.x, -panLimitX, panLimitX);
+                    panOffset.y = Mathf.Clamp(panOffset.y, -panLimitDown, panLimitUp);
+                    Debug.Log($"panOffset.y = {panOffset.y} | down={panLimitDown} up={panLimitUp}");
+                }
+            }
+
+            // 0 saat di tengah/atas, naik sampai 1 saat di batas bawah
+            float downT = Mathf.Clamp01(-panOffset.y / panLimitDown);
+
+            Vector3 targetPos = zoomPoint.position
+                              + zoomPoint.right * panOffset.x
+                              + zoomPoint.up * panOffset.y
+                              + zoomPoint.forward * (downT * forwardAtBottom);
+
+            cam.position = Vector3.Lerp(cam.position, targetPos, Time.deltaTime * cameraSpeed);
             cam.rotation = Quaternion.Slerp(cam.rotation, zoomPoint.rotation, Time.deltaTime * cameraSpeed);
         }
         else if (returning)
@@ -98,6 +143,8 @@ public class Bookshelf : MonoBehaviour
     {
         isZoomed = true;
         returning = false;
+        panOffset = Vector2.zero;
+        isDragging = false;
 
         // Simpan posisi kamera saat ini, supaya kembali ke posisi terakhir
         camOriginalPos = cam.position;
