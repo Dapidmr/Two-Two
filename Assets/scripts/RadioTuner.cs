@@ -37,7 +37,7 @@ public class RadioTuner : MonoBehaviour
     public UnityEvent onTuned;           // dipanggil sekali saat pertama kali pas
 
     [Header("Kunci keluar dari zoom")]
-    public Bookshelf bookshelf;          // kosongkan kalau Bookshelf ada di objek yang sama
+    public ZoomView zoomView;            // kosongkan kalau ZoomView ada di objek yang sama
     public bool showExitHint = true;
 
     [Header("Tombol power")]
@@ -67,7 +67,7 @@ public class RadioTuner : MonoBehaviour
     void Start()
     {
         if (volumeKnob != null) knobCollider = volumeKnob.GetComponent<Collider>();
-        if (bookshelf == null) bookshelf = GetComponent<Bookshelf>();
+        if (zoomView == null) zoomView = GetComponent<ZoomView>();
 
         // Mulai langsung di volume yang diset knob (tanpa fade-in)
         if (volumeKnob != null && frequencyKnob != null)
@@ -93,6 +93,7 @@ public class RadioTuner : MonoBehaviour
 
     bool IsZoomed()
     {
+        if (zoomView != null) return zoomView.IsZoomed;
         return knobCollider != null && knobCollider.enabled;
     }
 
@@ -137,7 +138,7 @@ public class RadioTuner : MonoBehaviour
             PressPower();
 
         // Pemain hanya boleh keluar dari zoom kalau radio OFF
-        if (bookshelf != null) bookshelf.allowExit = !isOn;
+        if (zoomView != null) zoomView.allowExit = !isOn;
 
         // Seberapa dekat frekuensi ke titik yang benar
         float targetCloseness = Closeness(frequencyKnob.value, targetFrequency);
