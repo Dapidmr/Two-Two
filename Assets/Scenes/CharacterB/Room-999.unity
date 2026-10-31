@@ -464,8 +464,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -477,6 +481,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -586,8 +594,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -599,6 +611,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -859,7 +875,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
   hoverLift: 0.05
-  hoverSpeed: 10
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -871,6 +891,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -917,8 +941,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -930,6 +958,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -976,8 +1008,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -989,6 +1025,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -1254,8 +1294,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -1267,6 +1311,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -1376,8 +1424,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -1389,6 +1441,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -1746,6 +1802,7 @@ Transform:
   - {fileID: 1066054960}
   - {fileID: 118573615}
   - {fileID: 1336648388}
+  - {fileID: 1642195592}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &392545296 stripped
@@ -1771,7 +1828,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
   hoverLift: 0.05
-  hoverSpeed: 10
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -1783,6 +1844,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -2373,8 +2438,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -2386,6 +2455,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -2433,7 +2506,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
   hoverLift: 0.05
-  hoverSpeed: 10
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -2445,6 +2522,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -2491,8 +2572,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -2504,6 +2589,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -2550,8 +2639,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -2563,6 +2656,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -2609,8 +2706,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -2622,6 +2723,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -2877,8 +2982,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -2890,6 +2999,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -3267,8 +3380,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -3280,6 +3397,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -3551,8 +3672,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -3564,6 +3689,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -3673,8 +3802,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -3686,6 +3819,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -3858,8 +3995,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -3871,6 +4012,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -3984,8 +4129,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -3997,6 +4146,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -4021,6 +4174,143 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.14240745, y: 0.6555937, z: 0.4720745}
   m_Center: {x: 0, y: 0.32779685, z: 0}
+--- !u!1 &1083632241
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1083632244}
+  - component: {fileID: 1083632243}
+  - component: {fileID: 1083632242}
+  m_Layer: 5
+  m_Name: BookBackText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1083632242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083632241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: Press Esc to back
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 18
+  m_fontSizeBase: 18
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1083632243
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083632241}
+  m_CullTransparentMesh: 1
+--- !u!224 &1083632244
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083632241}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.35}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1219931144}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 60}
+  m_SizeDelta: {x: 600, y: 80}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1103920561
 GameObject:
   m_ObjectHideFlags: 0
@@ -4243,8 +4533,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -4256,6 +4550,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -4303,7 +4601,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
   hoverLift: 0
-  hoverSpeed: 10
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 1
+  tiltAngle: -12
+  hingeOnRight: 1
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -4315,6 +4617,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -4435,6 +4741,7 @@ RectTransform:
   m_Children:
   - {fileID: 1851671318}
   - {fileID: 2102563074}
+  - {fileID: 1083632244}
   - {fileID: 1103920562}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4691,8 +4998,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -4704,6 +5015,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -4750,8 +5065,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -4763,6 +5082,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -4809,8 +5132,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -4822,6 +5149,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -4962,8 +5293,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -4975,6 +5310,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -5084,8 +5423,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -5097,6 +5440,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -5319,8 +5666,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -5332,6 +5683,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -5567,8 +5922,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -5580,6 +5939,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -5689,8 +6052,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -5702,6 +6069,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -5762,6 +6133,73 @@ Transform:
   - {fileID: 1853195548}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1642195589 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+  m_PrefabInstance: {fileID: 1783126407}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1642195592 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+  m_PrefabInstance: {fileID: 1783126407}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1642195593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1642195589}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BookItem
+  hoverLift: 0.1
+  hoverSpeed: 10
+  holdShrink: 0.03
+  tiltOnHover: 1
+  tiltAngle: -15
+  hingeOnRight: 1
+  bookshelf: {fileID: 0}
+  lockOthersOnCollect: 0
+  canBeCollected: 0
+  onWrongBook:
+    m_PersistentCalls:
+      m_Calls: []
+  pushDistance: 0.15
+  pushDuration: 0.25
+  fallDuration: 1
+  fallDrift: 0.3
+  tiltSpeed: 120
+  inspectDistance: 0.5
+  inspectMoveSpeed: 8
+  rotateSpeed: 0.4
+  inspectRadius: 0.2
+  onCollected:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!65 &1642195594
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1642195589}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.4000001, y: 0, z: 0.18677276}
+  m_Center: {x: 0, y: 0, z: 0.006613663}
 --- !u!1001 &1679895782
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5847,8 +6285,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -5860,6 +6302,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -6033,7 +6479,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
   hoverLift: 0
-  hoverSpeed: 10
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 1
+  tiltAngle: -12
+  hingeOnRight: 1
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -6045,6 +6495,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -6069,6 +6523,69 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.14240745, y: 0.6555937, z: 0.4720745}
   m_Center: {x: 0, y: 0.32779685, z: 0}
+--- !u!1001 &1783126407
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 341058789}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4.378
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.5034
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.104
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.15053347
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.98860496
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -162.684
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      propertyPath: m_Name
+      value: Hertz Code
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1642195594}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1642195593}
+  m_SourcePrefab: {fileID: 100100000, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
 --- !u!1 &1787166690 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 215e78c7f7d8eb04e82a1d1bb8d0aacd, type: 3}
@@ -6147,9 +6664,15 @@ MonoBehaviour:
   playerController: {fileID: 260432659}
   playerRenderers:
   - {fileID: 260432656}
+  allowExit: 1
   panLimit: {x: 0.5, y: 0.3}
   dragSpeed: 0.002
   dragThreshold: 5
+  inspectHintText: {fileID: 1083632242}
+  dimMax: 0.75
+  dimFadeSpeed: 4
+  dimGap: 0.2
+  inspectCameraBack: 1
   panLimitX: 0.5
   panLimitUp: 0.3
   panLimitDown: 2.5
@@ -6290,7 +6813,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
   hoverLift: 0.05
-  hoverSpeed: 10
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -6302,6 +6829,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -6348,8 +6879,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -6361,6 +6896,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -6621,9 +7160,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 5.226
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 0cecdb3e509768a4f9f6edab661b95d7, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 0cecdb3e509768a4f9f6edab661b95d7, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: -876546973899608171, guid: 0cecdb3e509768a4f9f6edab661b95d7, type: 3}
     - target: {fileID: 919132149155446097, guid: 0cecdb3e509768a4f9f6edab661b95d7, type: 3}
       propertyPath: m_Name
-      value: Book (11)
+      value: selectedBook
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6660,8 +7207,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
   hoverLift: 0.05
   hoverSpeed: 10
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
-  lockOthersOnCollect: 1
+  lockOthersOnCollect: 0
   canBeCollected: 1
   onWrongBook:
     m_PersistentCalls:
@@ -6671,6 +7222,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.5
+  inspectMoveSpeed: 8
+  rotateSpeed: 0.4
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -6717,8 +7272,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -6730,6 +7289,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -6776,8 +7339,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -6789,6 +7356,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -6835,8 +7406,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 1
+  tiltAngle: -12
+  hingeOnRight: 1
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -6848,6 +7423,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -6894,8 +7473,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2dc68d1184712b4da680462911b8d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
-  hoverLift: 0.05
-  hoverSpeed: 10
+  hoverLift: 0.1
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 0
+  tiltAngle: 12
+  hingeOnRight: 0
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -6907,6 +7490,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -7017,7 +7604,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookItem
   hoverLift: 0
-  hoverSpeed: 10
+  hoverSpeed: 12
+  holdShrink: 0.03
+  tiltOnHover: 1
+  tiltAngle: -12
+  hingeOnRight: 1
   bookshelf: {fileID: 0}
   lockOthersOnCollect: 1
   canBeCollected: 0
@@ -7029,6 +7620,10 @@ MonoBehaviour:
   fallDuration: 1
   fallDrift: 0.3
   tiltSpeed: 120
+  inspectDistance: 0.6
+  inspectMoveSpeed: 5
+  rotateSpeed: 0.3
+  inspectRadius: 0.2
   onCollected:
     m_PersistentCalls:
       m_Calls: []
