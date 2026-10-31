@@ -8,16 +8,19 @@ public class RadioKnob : MonoBehaviour
     public float value = 0f;             // posisi knob, 0 sampai 1
 
     [Header("Kontrol")]
-    public float stepSize = 0.005f;      // sekali tekan panah = geser segini (0.005 = 0.1 MHz di rentang 88-108)
-    public float holdDelay = 0.3f;       // tahan panah lebih dari ini (detik) = gerak cepat
-    public float keySpeed = 0.35f;       // kecepatan gerak cepat (nilai per detik)
+    public float stepSize = 0.05f;       // sekali tekan panah = geser segini (diatur otomatis oleh RadioTuner)
+    public float holdDelay = 0.3f;       // tahan panah lebih dari ini (detik) = mulai mengulang langkah
+    public float repeatInterval = 0.07f; // jeda antar langkah saat panah ditahan
     public float maxAngle = 270f;        // putaran total dari 0 ke 1
 
     [Header("Rotasi")]
     public Vector3 rotationAxis = Vector3.forward;  // sumbu putar (lokal)
 
     [Header("Penanda knob terpilih")]
-    public float selectedScale = 1.1f;   // knob terpilih membesar sedikit
+    public float selectedScale = 1f;     // 1 = tidak mengubah ukuran sama sekali
+
+    // Waktu terakhir pemain memutar knob ini (dipakai RadioTuner untuk suara memutar)
+    public float LastChangeTime { get; private set; } = -999f;
 
     // Knob yang sedang dipilih (dipakai bersama semua knob)
     private static RadioKnob selected;
@@ -26,6 +29,7 @@ public class RadioKnob : MonoBehaviour
     private Vector3 startScale;
     private Collider col;
     private float holdTimer = 0f;
+    private float repeatTimer = 0f;
     private bool started = false;
 
     void OnEnable()
@@ -47,7 +51,7 @@ public class RadioKnob : MonoBehaviour
         started = true;
     }
 
-    // Dipakai script lain untuk menetapkan posisi knob
+    // Dipakai script lain untuk menetapkan posisi knob (tidak dihitung sebagai pemain memutar)
     public void SetValue(float v)
     {
         value = Mathf.Clamp01(v);
@@ -75,33 +79,54 @@ public class RadioKnob : MonoBehaviour
 
                 if (rightDown || leftDown)
                 {
-                    // Sekali tekan: geser tepat satu langkah (dirapikan ke kelipatan langkah)
-                    int dir = rightDown ? 1 : -1;
-                    value = Mathf.Clamp01(Snap(value) + dir * stepSize);
+                    // Sekali tekan: geser tepat satu langkah
+                    Step(rightDown ? 1 : -1);
                     holdTimer = 0f;
-                    ApplyRotation();
+                    repeatTimer = 0f;
                 }
                 else if (rightHeld != leftHeld)
                 {
-                    // Ditahan: setelah jeda, gerak cepat
+                    // Ditahan: setelah jeda, ulangi langkah secara berkala
                     holdTimer += Time.deltaTime;
                     if (holdTimer > holdDelay)
                     {
-                        float dir = rightHeld ? 1f : -1f;
-                        value = Mathf.Clamp01(value + dir * keySpeed * Time.deltaTime);
-                        ApplyRotation();
+                        repeatTimer += Time.deltaTime;
+                        int dir = rightHeld ? 1 : -1;
+                        while (repeatTimer >= repeatInterval)
+                        {
+                            Step(dir);
+                            repeatTimer -= repeatInterval;
+                        }
                     }
                 }
                 else
                 {
                     holdTimer = 0f;
+                    repeatTimer = 0f;
                 }
             }
         }
 
-        // Knob terpilih membesar sedikit
-        float s = (selected == this && col.enabled) ? selectedScale : 1f;
-        transform.localScale = Vector3.Lerp(transform.localScale, startScale * s, Time.deltaTime * 12f);
+        // Kalau Selected Scale = 1, script tidak menyentuh skala sama sekali
+        if (!Mathf.Approximately(selectedScale, 1f))
+        {
+            float s = (selected == this && col.enabled) ? selectedScale : 1f;
+            transform.localScale = Vector3.Lerp(transform.localScale, startScale * s, Time.deltaTime * 12f);
+        }
+    }
+
+    void Step(int dir)
+    {
+        if (stepSize <= 0f) return;
+
+        float before = value;
+        value = Mathf.Clamp01(Snap(value) + dir * stepSize);
+
+        if (!Mathf.Approximately(before, value))
+        {
+            LastChangeTime = Time.time;
+            ApplyRotation();
+        }
     }
 
     float Snap(float v)
@@ -133,4 +158,4 @@ public class RadioKnob : MonoBehaviour
     {
         transform.localRotation = startRot * Quaternion.AngleAxis(value * maxAngle, rotationAxis);
     }
-}   
+}

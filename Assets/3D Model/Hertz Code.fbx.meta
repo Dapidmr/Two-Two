@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: e3fcaba6aafc2ab4c99e831677cfd8d3
+=======
+guid: 0f6ac59abfa0ae446895f405b6183ffd
+>>>>>>> 3477370 (add code for radio, fixed up button, and add trigger for book)
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []

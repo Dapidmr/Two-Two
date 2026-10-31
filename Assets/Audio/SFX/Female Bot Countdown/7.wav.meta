@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: 87c67db6f7d3c4e459f6634d02a6f378
+=======
+guid: 7567aecc35d79c3439cdc03cec73b452
+>>>>>>> 3477370 (add code for radio, fixed up button, and add trigger for book)
 AudioImporter:
   externalObjects: {}
   serializedVersion: 8

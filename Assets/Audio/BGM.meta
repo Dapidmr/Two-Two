@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: 2cabeae7313293c46b7f77db226f5e3e
+=======
+guid: 344d6a8edd8caf446bbaa6d9b028510b
+>>>>>>> 3477370 (add code for radio, fixed up button, and add trigger for book)
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
