@@ -2996,6 +2996,13 @@ MonoBehaviour:
   playerRenderers:
   - {fileID: 260432656}
   allowExit: 1
+  panLimit: {x: 0.5, y: 0.3}
+  dragSpeed: 0.002
+  dragThreshold: 5
+  panLimitX: 0.5
+  panLimitUp: 0.3
+  panLimitDown: 1.5
+  forwardAtBottom: 0.5
 --- !u!4 &1476978497 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 215e78c7f7d8eb04e82a1d1bb8d0aacd, type: 3}
@@ -3935,11 +3942,11 @@ MonoBehaviour:
   passwordMHz: 110.75
   passwordWindow: 0.05
   passwordClips:
-  - {fileID: 8300000, guid: 6834555500e80b146928decc50fa494c, type: 3}
-  - {fileID: 8300000, guid: 71c34b7ca5546f842a3bfec8f6564d57, type: 3}
-  - {fileID: 8300000, guid: 8bad5629e49503c4fbe8747612a8953c, type: 3}
-  - {fileID: 8300000, guid: 3f6ad100cef7ca640af1ca8fcc295584, type: 3}
-  - {fileID: 8300000, guid: 3f6ad100cef7ca640af1ca8fcc295584, type: 3}
+  - {fileID: 8300000, guid: 5e9a8e99a221d2147be58137f02c4064, type: 3}
+  - {fileID: 8300000, guid: 1510c082e58315b48bb2ba50aaf18bed, type: 3}
+  - {fileID: 8300000, guid: 8a82363bf5371d343abeca9100b471e2, type: 3}
+  - {fileID: 8300000, guid: f4341b2e4d095824d826cf992baceb22, type: 3}
+  - {fileID: 8300000, guid: f4341b2e4d095824d826cf992baceb22, type: 3}
   passwordVolume: 1
   passwordStartDelay: 1
   gapBetweenClips: 0.4
