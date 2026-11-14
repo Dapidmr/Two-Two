@@ -28,10 +28,12 @@ public class SlidingCover : MonoBehaviour
     private Vector3 closedLocalPos;
     private Vector3 openLocalPos;
     private Collider col;
+    private ZoomView owner;      // ZoomView induk (untuk memeriksa apakah kontrol tertutup badan benda)
 
     void Start()
     {
         col = GetComponent<Collider>();
+        owner = GetComponentInParent<ZoomView>();
 
         // Posisi tertutup = posisi awal. Posisi terbuka dihitung sekali di sini.
         closedLocalPos = transform.localPosition;
@@ -114,7 +116,7 @@ public class SlidingCover : MonoBehaviour
                 closestDist = h.distance;
             }
         }
-        return closest == this;
+        return closest == this && (owner == null || owner.IsControlVisible(col));
     }
 
     // Garis di Scene view yang menunjukkan ke mana tutupan akan bergeser (muncul saat objek dipilih)

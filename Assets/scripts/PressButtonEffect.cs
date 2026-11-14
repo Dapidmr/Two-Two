@@ -20,12 +20,14 @@ public class PressButtonEffect : MonoBehaviour
     private Vector3 upLocalPos;
     private Vector3 downLocalPos;
     private Collider col;
+    private ZoomView owner;      // ZoomView induk (untuk memeriksa apakah kontrol tertutup badan benda)
     private bool holding = false;
     private float downTimer = 0f;
 
     void Start()
     {
         col = GetComponent<Collider>();
+        owner = GetComponentInParent<ZoomView>();
 
         // Posisi naik = posisi awal. Posisi turun dihitung sekali di sini.
         upLocalPos = transform.localPosition;
@@ -76,7 +78,7 @@ public class PressButtonEffect : MonoBehaviour
                 closestDist = h.distance;
             }
         }
-        return closest == this;
+        return closest == this && (owner == null || owner.IsControlVisible(col));
     }
 
     // ---- Fungsi bantu (dipakai juga oleh RadioKeypad) ----

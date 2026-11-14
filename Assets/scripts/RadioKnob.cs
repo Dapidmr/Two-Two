@@ -28,6 +28,7 @@ public class RadioKnob : MonoBehaviour
     private Quaternion startRot;
     private Vector3 startScale;
     private Collider col;
+    private ZoomView owner;      // ZoomView induk (untuk memeriksa apakah kontrol tertutup badan benda)
     private float holdTimer = 0f;
     private float repeatTimer = 0f;
     private bool started = false;
@@ -45,6 +46,7 @@ public class RadioKnob : MonoBehaviour
     void Start()
     {
         col = GetComponent<Collider>();
+        owner = GetComponentInParent<ZoomView>();
         startRot = transform.localRotation;
         startScale = transform.localScale;
         ApplyRotation();
@@ -151,7 +153,7 @@ public class RadioKnob : MonoBehaviour
                 closestDist = h.distance;
             }
         }
-        return closest == this;
+        return closest == this && (owner == null || owner.IsControlVisible(col));
     }
 
     void ApplyRotation()

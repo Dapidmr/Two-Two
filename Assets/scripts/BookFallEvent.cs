@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -27,14 +28,31 @@ public class BookFallEvent : MonoBehaviour
     public AudioClip thudSound;
     public float soundDelay = 0.3f;       // jeda sebelum suara bruk (kira-kira waktu buku jatuh)
 
-    [Header("Bantuan mencari masalah")]
-    public bool showStatusOnScreen = true;   // tampilkan status di pojok kiri atas layar Game
+    [Header("Setelah mendarat: bisa diinteract (tekan E untuk zoom dan putar)")]
+    public bool interactAfterLanding = true;
+    public TextMeshProUGUI promptText;      // tulisan "Tekan E" (PromptText di Canvas)
+    public MonoBehaviour playerController;  // script gerak player, dimatikan saat zoom
+    public Renderer[] playerRenderers;      // mesh player yang disembunyikan saat zoom
+    public GameObject[] hideDuringZoom;     // objek lain yang disembunyikan saat zoom (opsional, mis. Table)
+    public GameObject popupImage;           // opsional: gambar yang muncul selama memeriksa buku
+    public float interactRadius = 1.2f;     // jarak pemain ke buku supaya "Tekan E" muncul (meter)
+    public float zoomDistance = 0.8f;       // jarak kamera dari buku saat zoom
+    public float zoomPitch = 55f;           // sudut kamera melihat ke bawah (derajat)
+    public float zoomFieldOfView = 0f;      // 0 = tidak diubah
+    public UnityEvent onInspectEnter;
+    public UnityEvent onInspectExit;
 
     private bool hasFallen = false;
+    private bool fallStarted = false;
     private bool rescued = false;
+    private bool interactReady = false;
+    private float sinceFall = 0f;
+    private float stillTimer = 0f;
+
     private Rigidbody rb;
     private RadioTuner radio;
-    private string status = "";
+    private ZoomView zoomView;
+    private Transform zoomPointTf;
 
     void Start()
     {
@@ -45,19 +63,15 @@ public class BookFallEvent : MonoBehaviour
             {
                 if (radio.onPoweredOff == null) radio.onPoweredOff = new UnityEvent();
                 radio.onPoweredOff.AddListener(TriggerFall);
-                status = "siap, menunggu radio dimatikan";
             }
             else
             {
-                status = "RadioTuner tidak ditemukan di scene";
+                Debug.LogWarning("[BookFallEvent] RadioTuner tidak ditemukan di scene.");
             }
         }
-        else
-        {
-            status = "menunggu dipanggil lewat event";
-        }
 
-        if (bookToFall == null) status = "Book To Fall masih KOSONG";
+        if (bookToFall == null)
+            Debug.LogWarning("[BookFallEvent] Book To Fall masih kosong. Drag bukunya ke slot itu.");
     }
 
     void OnDestroy()
@@ -71,18 +85,12 @@ public class BookFallEvent : MonoBehaviour
     {
         if (bookToFall == null)
         {
-            status = "Book To Fall masih KOSONG, drag bukunya ke slot itu";
             Debug.LogWarning("[BookFallEvent] Book To Fall masih kosong. Drag bukunya ke slot itu.");
             return;
         }
-        if (hasFallen)
-        {
-            Debug.Log("[BookFallEvent] Buku sudah pernah dijatuhkan, panggilan ini diabaikan.");
-            return;
-        }
+        if (hasFallen) return;
 
         hasFallen = true;
-        status = "dipanggil untuk: " + bookToFall.name;
         Debug.Log("[BookFallEvent] TriggerFall dipanggil untuk: " + bookToFall.name);
 
         if (delay > 0f) Invoke(nameof(DoFall), delay);
@@ -113,6 +121,8 @@ public class BookFallEvent : MonoBehaviour
         // 5) Cek apakah ada lantai (collider) di bawah buku
         Transform shelfRoot = bookToFall.parent;
         float floorY = FindFloorY(bookCol, shelfRoot);
+        if (float.IsNaN(floorY))
+            Debug.LogWarning("[BookFallEvent] Tidak ada collider lantai di bawah buku, buku akan tembus. Tambahkan Box Collider di lantai.");
 
         // 6) Abaikan tabrakan dengan badan rak, lalu lepas buku dari rak (jadi objek mandiri)
         if (ignoreShelfCollision && shelfRoot != null)
@@ -147,15 +157,28 @@ public class BookFallEvent : MonoBehaviour
             bookToFall.rotation = floorPosition.rotation;
         }
 
-        status = "buku dijatuhkan: " + book.name + " | collider " + (bookCol.enabled ? "aktif" : "MATI")
-               + " | " + (float.IsNaN(floorY) ? "TIDAK ADA lantai (collider) di bawah buku, buku akan tembus!" : "lantai di y=" + floorY.ToString("0.00"));
-        Debug.Log("[BookFallEvent] " + status);
-
+        Debug.Log("[BookFallEvent] Buku dijatuhkan: " + book.name);
         Invoke(nameof(PlayThud), soundDelay);
+
+        fallStarted = true;
+        sinceFall = 0f;
+    }
+
+    void Update()
+    {
+        RescueIfBelowFloor();
+
+        // Setelah buku berhenti, pasang interaksi
+        if (interactAfterLanding && fallStarted && !interactReady)
+            CheckLanded();
+
+        // Titik kamera selalu menghadap sisi tempat pemain berada (sebelum zoom dimulai)
+        if (interactReady && zoomView != null && !zoomView.IsZoomed)
+            UpdateZoomPoint();
     }
 
     // Pengaman: kalau buku sampai jatuh jauh di bawah lantai, taruh di Floor Position
-    void Update()
+    void RescueIfBelowFloor()
     {
         if (!hasFallen || rescued || !useRealPhysics || floorPosition == null || bookToFall == null) return;
 
@@ -172,8 +195,110 @@ public class BookFallEvent : MonoBehaviour
 
             bookToFall.position = floorPosition.position;
             bookToFall.rotation = floorPosition.rotation;
-            status = "buku tembus lantai, dipindah ke Floor Position";
         }
+    }
+
+    // Buku dianggap sudah mendarat kalau diam sekitar 0,6 detik
+    void CheckLanded()
+    {
+        sinceFall += Time.deltaTime;
+
+        if (!useRealPhysics)
+        {
+            SetupInteraction();
+            return;
+        }
+        if (rb == null) return;
+
+        bool still = rb.linearVelocity.sqrMagnitude < 0.0025f && rb.angularVelocity.sqrMagnitude < 0.01f;
+        stillTimer = still ? stillTimer + Time.deltaTime : 0f;
+
+        if ((sinceFall > 0.5f && stillTimer > 0.6f) || sinceFall > 6f || rescued)
+            SetupInteraction();
+    }
+
+    void SetupInteraction()
+    {
+        if (interactReady || bookToFall == null) return;
+        interactReady = true;
+
+        // Bekukan buku di tempatnya supaya bisa diputar lewat ZoomView tanpa dilawan fisika
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+            rb.interpolation = RigidbodyInterpolation.None;
+        }
+
+        // Area deteksi pemain (bola trigger di sekitar buku)
+        SphereCollider area = bookToFall.gameObject.AddComponent<SphereCollider>();
+        area.isTrigger = true;
+        Vector3 ls = bookToFall.lossyScale;
+        float s = Mathf.Max(Mathf.Abs(ls.x), Mathf.Abs(ls.y), Mathf.Abs(ls.z));
+        if (s < 0.0001f) s = 1f;
+        area.radius = interactRadius / s;
+        area.center = bookToFall.InverseTransformPoint(BookCenter());
+
+        // Titik tujuan kamera (objek terpisah, posisinya diperbarui terus sebelum zoom)
+        GameObject zp = new GameObject("BookZoomPoint");
+        zoomPointTf = zp.transform;
+
+        // ZoomView yang sama seperti di radio
+        zoomView = bookToFall.gameObject.AddComponent<ZoomView>();
+        zoomView.promptText = promptText;
+        zoomView.heightOffset = 0.5f;
+        zoomView.zoomPoint = zoomPointTf;
+        zoomView.zoomFieldOfView = zoomFieldOfView;
+        zoomView.controlColliders = new Collider[0];
+        zoomView.playerController = playerController;
+        zoomView.playerRenderers = playerRenderers != null ? playerRenderers : new Renderer[0];
+        zoomView.hideDuringZoom = hideDuringZoom;
+        zoomView.allowExit = true;
+
+        if (zoomView.onEnter == null) zoomView.onEnter = new UnityEvent();
+        if (zoomView.onExit == null) zoomView.onExit = new UnityEvent();
+        zoomView.onEnter.AddListener(() =>
+        {
+            if (popupImage != null) popupImage.SetActive(true);
+            if (onInspectEnter != null) onInspectEnter.Invoke();
+        });
+        zoomView.onExit.AddListener(() =>
+        {
+            if (popupImage != null) popupImage.SetActive(false);
+            if (onInspectExit != null) onInspectExit.Invoke();
+        });
+
+        UpdateZoomPoint();
+        Debug.Log("[BookFallEvent] Buku sudah mendarat dan bisa diinteract (tekan E di dekatnya).");
+    }
+
+    Vector3 BookCenter()
+    {
+        Renderer r = bookToFall.GetComponentInChildren<Renderer>();
+        return r != null ? r.bounds.center : bookToFall.position;
+    }
+
+    // Kamera diletakkan di sisi pemain, miring ke bawah menghadap buku
+    void UpdateZoomPoint()
+    {
+        if (zoomPointTf == null || bookToFall == null) return;
+
+        Vector3 center = BookCenter();
+
+        Transform playerTf = playerController != null ? playerController.transform
+                           : (Camera.main != null ? Camera.main.transform : null);
+
+        Vector3 toPlayer = playerTf != null ? playerTf.position - center : Vector3.back;
+        toPlayer.y = 0f;
+        if (toPlayer.sqrMagnitude < 0.0001f) toPlayer = Vector3.back;
+        toPlayer.Normalize();
+
+        float pitch = zoomPitch * Mathf.Deg2Rad;
+        Vector3 dir = (toPlayer * Mathf.Cos(pitch) + Vector3.up * Mathf.Sin(pitch)).normalized;
+
+        zoomPointTf.position = center + dir * zoomDistance;
+        zoomPointTf.rotation = Quaternion.LookRotation(center - zoomPointTf.position, Vector3.up);
     }
 
     // Mencari tinggi lantai tepat di bawah buku. NaN = tidak ada collider di bawahnya.
@@ -198,6 +323,7 @@ public class BookFallEvent : MonoBehaviour
         return y;
     }
 
+    // Keluarkan collider buku dari daftar rak (Bookshelf lama maupun ZoomView) supaya tidak dimatikan lagi
     void UnregisterFromBookshelf(Collider col)
     {
         foreach (Bookshelf shelf in FindObjectsByType<Bookshelf>(FindObjectsSortMode.None))
@@ -206,6 +332,14 @@ public class BookFallEvent : MonoBehaviour
 
             List<Collider> list = new List<Collider>(shelf.bookColliders);
             if (list.Remove(col)) shelf.bookColliders = list.ToArray();
+        }
+
+        foreach (ZoomView zv in FindObjectsByType<ZoomView>(FindObjectsSortMode.None))
+        {
+            if (zv.controlColliders == null) continue;
+
+            List<Collider> list = new List<Collider>(zv.controlColliders);
+            if (list.Remove(col)) zv.controlColliders = list.ToArray();
         }
     }
 
@@ -226,20 +360,4 @@ public class BookFallEvent : MonoBehaviour
         if (audioSource != null && thudSound != null)
             audioSource.PlayOneShot(thudSound);
     }
-
-    void OnGUI()
-    {
-        if (!showStatusOnScreen) return;
-
-        GUIStyle st = new GUIStyle(GUI.skin.label);
-        st.fontSize = 22;
-        st.fontStyle = FontStyle.Bold;
-        st.normal.textColor = Color.yellow;
-
-        string text = "[BookFall] " + status;
-        if (hasFallen && bookToFall != null)
-            text += " | tinggi buku sekarang: " + bookToFall.position.y.ToString("0.00");
-
-        GUI.Label(new Rect(20, 20, Screen.width - 40, 40), text, st);
-    }
-}
+}   

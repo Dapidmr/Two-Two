@@ -7,10 +7,12 @@ public class RadioPowerButton : MonoBehaviour
     public RadioTuner tuner;             // kosongkan kalau RadioTuner ada di induk objek ini
 
     private Collider col;
+    private ZoomView owner;      // ZoomView induk (untuk memeriksa apakah kontrol tertutup badan benda)
 
     void Start()
     {
         col = GetComponent<Collider>();
+        owner = GetComponentInParent<ZoomView>();
         if (tuner == null) tuner = GetComponentInParent<RadioTuner>();
     }
 
@@ -41,6 +43,6 @@ public class RadioPowerButton : MonoBehaviour
                 closestDist = h.distance;
             }
         }
-        return closest == this;
+        return closest == this && (owner == null || owner.IsControlVisible(col));
     }
 }
