@@ -588,4 +588,18 @@ public class ZoomView : MonoBehaviour
         foreach (var r in playerRenderers)
             if (r != null) r.enabled = value;
     }
+
+    // Dipanggil setelah benda dipindah dari luar, supaya pose awal dan pusat putaran dicatat ulang
+    public void RebaseOrigin()
+    {
+        if (rotateTarget == null) return;
+        origPos = rotateTarget.position;
+        origRot = rotateTarget.rotation;
+        pivotPos = ComputeCenter();
+        yaw = 0f;
+        pitch = 0f;
+        velocity = Vector2.zero;
+    }
+
 }
+
