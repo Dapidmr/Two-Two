@@ -38,6 +38,18 @@ public class BookItem : MonoBehaviour
     public float rotateSpeed = 0.4f;       // derajat per pixel drag
     public float inspectRadius = 0.2f;     // ukuran buku saat inspect (radius ujung terjauh, world unit)
 
+    public Vector3 faceLocalAxis = Vector3.up;   // sumbu lokal buku yang menghadap kamera (rebah: 0,1,0)
+    public Vector3 faceLocalUp = Vector3.right;   // sumbu lokal buku (arah spine) yang diarahkan ke atas layar
+    public bool faceCameraOnInspect = false;   // centang di buku diary & Hertz Code
+
+    [Header("Buka Buku (E to read)")]
+    public bool canOpen = false;
+    public AnimationClip[] openClips;        // clip berawalan "Plane|" (10 clip)
+    public float openDuration = 1.2f;
+    public float openUp = 0.08f;             // geser ke atas, menyisakan ruang untuk teks bawah
+    public float openScaleMul = 1.3f;        // diperbesar saat terbuka
+    public float openRoll = 0f;              // putar searah jarum jam bila halaman miring (derajat)
+
     [Header("Saat buku diambil")]
     public UnityEvent onCollected;       // opsional: isi nanti (suara, pesan, dll)
 
@@ -60,6 +72,20 @@ public class BookItem : MonoBehaviour
     private Bounds originalBounds;
     private bool hasBounds = false;
     private float hoverT = 0f;
+    private float openT = 0f;
+    private float openTarget = 0f;
+    private bool readShown = false;
+    private bool openedHintShown = false;
+    private Quaternion openRot;
+    private Renderer[] allRends;
+    private Vector3 viewCenter;          // pusat visual saat ini (berubah saat buku terbuka)
+    public float openBlendSpeed = 3f;    // kecepatan geser/scale kembali setelah buku menutup
+    public float closeSpeedMul = 1.5f;   // animasi tutup lebih cepat dari buka
+    public float closeSkip = 0.07f;      // lompati bagian diam di awal animasi tutup (0..1 dari clip)
+    private float phase = 0f;       // posisi di clip (0..1), 0.5 = terbuka penuh
+    private int bookState = 0;      // 0 tertutup, 1 membuka, 2 terbuka, 3 menutup
+    private Quaternion inspectTargetRot;
+    private bool settlingRot = false;
     void Start()
     {
 
@@ -74,13 +100,17 @@ public class BookItem : MonoBehaviour
         originalPos = transform.position;
         originalRot = transform.rotation;
 
-        var rend = GetComponentInChildren<Renderer>();
-        if (rend != null)
+        var rends = GetComponentsInChildren<Renderer>();
+        if (rends.Length > 0)
         {
-            localCenter = transform.InverseTransformPoint(rend.bounds.center);
-            bookRadius = rend.bounds.extents.magnitude;   // jarak pusat ke ujung terjauh
-            originalBounds = rend.bounds;   // <- tambah
-            hasBounds = true;               // <- tambah
+            Bounds b = rends[0].bounds;
+            for (int i = 1; i < rends.Length; i++) b.Encapsulate(rends[i].bounds);
+
+            localCenter = transform.InverseTransformPoint(b.center);
+            bookRadius = b.extents.magnitude;
+            originalBounds = b;
+            hasBounds = true;
+            allRends = rends;
         }
     }
 
@@ -93,10 +123,12 @@ public class BookItem : MonoBehaviour
         if (returning) { UpdateReturn(); return; }
 
         bool otherInspecting = activeBook != null || (bookshelf != null && bookshelf.IsInspecting);
+        bool shelfActive = bookshelf == null || bookshelf.IsZoomed;   // interaksi hanya saat zoom
 
-        if (locked || otherInspecting)
+        if (locked || otherInspecting || !shelfActive)
         {
             isHovered = false;
+            pressedOnThis = false;   // <- tambah
             if (hoverOwner == this) hoverOwner = null;
         }
         else
@@ -208,6 +240,47 @@ public class BookItem : MonoBehaviour
         else StartInspect();              // buku lain: diambil untuk dibaca
     }
 
+    // Pusat bounds dalam ruang lokal buku, tidak terpengaruh rotasi buku saat ini
+    Vector3 CurrentLocalCenter()
+    {
+        if (allRends == null) return localCenter;
+        Matrix4x4 w2l = transform.worldToLocalMatrix;
+        bool first = true;
+        Bounds lb = new Bounds();
+        foreach (var r in allRends)
+        {
+            if (r == null) continue;
+            Bounds b = r.localBounds;
+            Matrix4x4 m = w2l * r.transform.localToWorldMatrix;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 c = b.center + Vector3.Scale(b.extents, new Vector3(
+                    (i & 1) == 0 ? -1f : 1f,
+                    (i & 2) == 0 ? -1f : 1f,
+                    (i & 4) == 0 ? -1f : 1f));
+                Vector3 p = m.MultiplyPoint3x4(c);
+                if (first) { lb = new Bounds(p, Vector3.zero); first = false; }
+                else lb.Encapsulate(p);
+            }
+        }
+        return first ? localCenter : lb.center;
+    }
+
+    Quaternion FaceRot(Transform cam)
+    {
+        // Frame buku: z = sumbu yang menghadap kamera, y = sumbu yang naik di layar
+        Quaternion local = Quaternion.LookRotation(faceLocalAxis.normalized, faceLocalUp.normalized);
+        // Frame layar: z = menjauhi kamera, y = atas kamera
+        Quaternion view = Quaternion.LookRotation(-cam.forward, cam.up);
+        return view * Quaternion.Inverse(local);
+    }
+
+    void ApplyOpenPose()
+    {
+        if (openClips == null) return;
+        foreach (var c in openClips)
+            if (c != null) c.SampleAnimation(gameObject, phase * c.length);
+    }
     void StartInspect()
     {
         activeBook = this;
@@ -217,33 +290,141 @@ public class BookItem : MonoBehaviour
         isHovered = false;
         hoverT = 0f;
         if (hoverOwner == this) hoverOwner = null;
+
+        // Reset state buka buku
+        openT = 0f;
+        openTarget = 0f;
+        phase = 0f;
+        bookState = 0;
+        viewCenter = localCenter;
+        ApplyOpenPose();   // paksa pose tertutup (phase 0)
+        readShown = false;
+        openedHintShown = false;
+
+        // Hadap kamera
+        settlingRot = false;
+        if (faceCameraOnInspect)
+        {
+            inspectTargetRot = FaceRot(Camera.main.transform);
+            settlingRot = true;
+        }
+
         if (bookshelf != null) bookshelf.BeginInspect(inspectDistance, inspectRadius);
     }
 
     void UpdateInspect()
     {
         Transform cam = Camera.main.transform;
+        bool ePressed = Keyboard.current.eKey.wasPressedThisFrame;
+        bool escPressed = Keyboard.current.escapeKey.wasPressedThisFrame;
 
-        // Drag mouse = putar buku
-        if (Mouse.current.leftButton.isPressed)
+        if (canOpen)
         {
+            if (escPressed)
+            {
+                if (bookState == 2)
+                {
+                    bookState = 3;                          // tutup: 50% -> 100%
+                    phase = Mathf.Min(1f, phase + closeSkip);
+                }
+                if (bookState != 0) escPressed = false;     // selama animasi, jangan keluar inspect
+            }
+            else if (ePressed && bookState == 0)
+            {
+                bookState = 1;                              // buka: 0% -> 50%
+                openRot = Quaternion.AngleAxis(openRoll, -cam.forward) * FaceRot(cam);
+            }
+
+            float step = Time.deltaTime / Mathf.Max(0.01f, openDuration) * 0.5f;
+            float prevPhase = phase;
+
+            if (bookState == 1)
+            {
+                phase = Mathf.MoveTowards(phase, 0.5f, step);
+                if (phase >= 0.5f) bookState = 2;
+            }
+            else if (bookState == 3)
+            {
+                phase = Mathf.MoveTowards(phase, 1f, step * closeSpeedMul);
+                if (phase >= 1f)
+                {
+                    // Pose 100% = cover belakang menghadap kamera
+                    phase = 1f;
+                    ApplyOpenPose();
+                    Vector3 pivot = transform.TransformPoint(CurrentLocalCenter());
+                    transform.RotateAround(pivot, cam.up, 180f);
+
+                    // Reset ke pose 0 (cover depan), lalu jaga pusat visual tetap di pivot
+                    phase = 0f;
+                    bookState = 0;
+                    settlingRot = false;
+                    ApplyOpenPose();
+
+                    Vector3 newCenterLocal = CurrentLocalCenter();
+                    transform.position += pivot - transform.TransformPoint(newCenterLocal);
+                    viewCenter = newCenterLocal;   // Lerp ke localCenter mulai dari sini, bukan dari nilai lama
+
+                    prevPhase = phase;             // pose sudah diterapkan, tidak perlu lagi di bawah
+                }
+            }
+
+            if (phase != prevPhase) ApplyOpenPose();
+
+            // 0 = tertutup, 1 = terbuka penuh, dipakai untuk kunci rotasi, geser, dan scale
+            openTarget = bookState == 0 ? 0f : 1f;
+            openT = Mathf.MoveTowards(openT, openTarget, Time.deltaTime * openBlendSpeed);
+
+            bool showRead = bookState == 0;
+            if (showRead != readShown)
+            {
+                readShown = showRead;
+                if (bookshelf != null) bookshelf.SetReadHint(showRead);
+            }
+
+            bool showOpened = bookState != 0;   // terbuka atau sedang membuka/menutup
+            if (showOpened != openedHintShown)
+            {
+                openedHintShown = showOpened;
+                if (bookshelf != null) bookshelf.SetOpenedHint(showOpened);
+            }
+        }
+
+        if (bookState != 0)
+        {
+            // Terbuka: dikunci menghadap kamera
+            transform.rotation = Quaternion.Slerp(transform.rotation, openRot, Time.deltaTime * inspectMoveSpeed);
+        }
+        else if (Mouse.current.leftButton.isPressed)
+        {
+            settlingRot = false;
             Vector2 d = Mouse.current.delta.ReadValue();
             transform.Rotate(cam.up, -d.x * rotateSpeed, Space.World);
             transform.Rotate(cam.right, d.y * rotateSpeed, Space.World);
         }
+        else if (settlingRot)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, inspectTargetRot, Time.deltaTime * inspectMoveSpeed);
+        }
 
-        transform.localScale = Vector3.Lerp(transform.localScale, targetScale, Time.deltaTime * inspectMoveSpeed);
-        // Pusat buku ditahan di depan kamera
-        Vector3 center = cam.position + cam.forward * inspectDistance;
-        Vector3 target = center - transform.TransformVector(localCenter);
+        float o = Mathf.SmoothStep(0f, 1f, openT);
+        Vector3 scaleT = targetScale * Mathf.Lerp(1f, openScaleMul, o);
+        transform.localScale = Vector3.Lerp(transform.localScale, scaleT, Time.deltaTime * inspectMoveSpeed);
+
+        Vector3 center = cam.position + cam.forward * inspectDistance + cam.up * (openUp * o);
+        Vector3 wantCenter = bookState != 0 ? CurrentLocalCenter() : localCenter;
+        viewCenter = bookState != 0
+            ? wantCenter
+            : Vector3.Lerp(viewCenter, wantCenter, Time.deltaTime * inspectMoveSpeed);
+        Vector3 target = center - transform.TransformVector(viewCenter);
         transform.position = Vector3.Lerp(transform.position, target, Time.deltaTime * inspectMoveSpeed);
 
-        // Esc = kembalikan ke rak
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        // Esc = kembalikan ke rak (hanya kalau buku sudah tertutup)
+        if (escPressed)
         {
             activeBook = null;
             inspecting = false;
             returning = true;
+            readShown = false;
             if (bookshelf != null) bookshelf.EndInspect();
         }
     }

@@ -6,7 +6,15 @@ public class Bookshelf : MonoBehaviour
 {
     [Header("UI")]
     public TextMeshProUGUI promptText;      // tulisan "Tekan E"
+    public string inspectHintOpened = "Press Esc to close book";
+    public string inspectHintDefault = "Press Esc to back";
     public float heightOffset = 1.5f;
+
+    [Header("Sisi Interaksi")]
+    public float frontAngle = 50f;          // derajat dari garis depan rak (total sudut = 2x ini)
+    public float frontAngleExitMargin = 10f;   // histeresis: keluar area butuh sudut lebih lebar
+    private Transform playerTf;
+    private bool insideTrigger = false;
 
     [Header("Kamera")]
     public Transform zoomPoint;             // empty object di depan rak, tempat kamera berhenti
@@ -29,6 +37,7 @@ public class Bookshelf : MonoBehaviour
 
     [Header("Inspect buku")]
     public TextMeshProUGUI inspectHintText;  // isi teks "Press Esc to back", taruh di bawah layar
+    public TextMeshProUGUI readHintText;     // teks "E to read..." di sisi kanan layar
     public float dimMax = 0.75f;             // gelap maksimal (0-1)
     public float dimFadeSpeed = 4f;
     public float dimGap = 0.05f;             // jarak layar gelap di belakang buku
@@ -40,6 +49,8 @@ public class Bookshelf : MonoBehaviour
     public float panLimitDown = 1.5f;    // batas kamera turun (lebih jauh)
     public float forwardAtBottom = 0.5f;  // seberapa jauh kamera maju saat sudah di batas bawah
     public bool IsDragging => isDragging;              // bisa dibaca script buku untuk membedakan klik vs drag
+    private Rigidbody playerRb;
+    public bool IsZoomed => isZoomed;
 
 
     private bool playerInRange = false;
@@ -60,10 +71,12 @@ public class Bookshelf : MonoBehaviour
         // Simpan posisi awal kamera sejak Start
         camOriginalPos = cam.position;
         camOriginalRot = cam.rotation;
-
         SetBooksInteractable(false);
         CreateDim();
         if (inspectHintText != null) inspectHintText.gameObject.SetActive(false);
+        if (readHintText != null) readHintText.gameObject.SetActive(false);
+        SetOpenedHint(false);
+        if (inspectHintText != null) inspectHintDefault = inspectHintText.text;
         if (promptText != null) promptText.gameObject.SetActive(false);
         if (inspectHintText != null) Debug.Log("canvas = " + inspectHintText.canvas.name + " | mode = " + inspectHintText.canvas.renderMode + " | pos = " + inspectHintText.rectTransform.anchoredPosition);
     }
@@ -71,30 +84,44 @@ public class Bookshelf : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
-        playerInRange = true;
-        if (promptText != null && !isZoomed) promptText.gameObject.SetActive(true);
+        playerTf = other.transform;
+        insideTrigger = true;
     }
 
     void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag("Player")) return;
+        insideTrigger = false;
         playerInRange = false;
         if (promptText != null) promptText.gameObject.SetActive(false);
     }
 
+    bool IsPlayerInFront(float maxAngle)
+    {
+        if (playerTf == null || zoomPoint == null) return false;
+
+        Vector3 toPlayer = playerTf.position - transform.position;
+        toPlayer.y = 0f;
+        if (toPlayer.sqrMagnitude < 0.0001f) return true;
+
+        Vector3 front = -zoomPoint.forward;
+        front.y = 0f;
+        return Vector3.Angle(front, toPlayer) <= maxAngle;
+    }
+
     void Update()
     {
-        // Prompt "Tekan E" mengikuti posisi rak
-        if (playerInRange && !isZoomed && promptText != null)
-        {
-            Vector3 worldPos = transform.position + Vector3.up * heightOffset;
-            promptText.transform.position = Camera.main.WorldToScreenPoint(worldPos);
-        }
-
+       
         bool ePressed = Keyboard.current.eKey.wasPressedThisFrame;
         bool escPressed = Keyboard.current.escapeKey.wasPressedThisFrame;
 
-        if (!isZoomed && playerInRange && ePressed)
+        if (!isZoomed && !returning)
+        {
+            float a = playerInRange ? frontAngle + frontAngleExitMargin : frontAngle;
+            playerInRange = insideTrigger && IsPlayerInFront(a);
+        }
+
+        if (!isZoomed && !returning && playerInRange && ePressed)
             EnterZoom();
         else if (isZoomed && allowExit && !(inspecting || Time.frameCount == inspectEndFrame) && (ePressed || escPressed))
             ExitZoom();
@@ -137,18 +164,14 @@ public class Bookshelf : MonoBehaviour
             cam.position = Vector3.Lerp(cam.position, targetPos, Time.deltaTime * cameraSpeed);
             cam.rotation = Quaternion.Slerp(cam.rotation, zoomPoint.rotation, Time.deltaTime * cameraSpeed);
         }
-        else if (returning)
+                else if (returning)
         {
             cam.position = Vector3.Lerp(cam.position, camOriginalPos, Time.deltaTime * cameraSpeed);
             cam.rotation = Quaternion.Slerp(cam.rotation, camOriginalRot, Time.deltaTime * cameraSpeed);
 
-            // Berhenti kalau sudah dekat
-            if (Vector3.Distance(cam.position, camOriginalPos) < 0.01f)
-            {
-                cam.position = camOriginalPos;
-                cam.rotation = camOriginalRot;
-                returning = false;
-            }
+            if (Vector3.Distance(cam.position, camOriginalPos) < 0.01f &&
+                Quaternion.Angle(cam.rotation, camOriginalRot) < 0.5f)
+                FinishExit();
         }
     }
 
@@ -165,6 +188,15 @@ public class Bookshelf : MonoBehaviour
 
         if (promptText != null) promptText.gameObject.SetActive(false);
         if (playerController != null) playerController.enabled = false;
+        if (playerController != null)
+        {
+            playerRb = playerController.GetComponent<Rigidbody>();
+            if (playerRb != null)
+            {
+                playerRb.linearVelocity = Vector3.zero;
+                playerRb.isKinematic = true;
+            }
+        }
         SetPlayerVisible(false);
 
         SetBooksInteractable(true);
@@ -174,17 +206,21 @@ public class Bookshelf : MonoBehaviour
 
     void ExitZoom()
     {
-        returning = true;
         isZoomed = false;
-
+        returning = true;
         SetBooksInteractable(false);
+        // controller & rigidbody diaktifkan lagi di FinishExit(), setelah kamera sampai
+    }
+
+    void FinishExit()
+    {
+        cam.position = camOriginalPos;
+        cam.rotation = camOriginalRot;
+        returning = false;
+
+        if (playerRb != null) playerRb.isKinematic = false;
         if (playerController != null) playerController.enabled = true;
         SetPlayerVisible(true);
-        if (playerInRange && promptText != null) promptText.gameObject.SetActive(true);
-
-        // Kalau game kamu pakai cursor terkunci (first person), aktifkan ini:
-        // Cursor.lockState = CursorLockMode.Locked;
-        // Cursor.visible = false;
     }
 
     void SetBooksInteractable(bool value)
@@ -230,9 +266,20 @@ public class Bookshelf : MonoBehaviour
         inspecting = false;
         inspectEndFrame = Time.frameCount;   // cegah Esc yang sama ikut keluar dari zoom
         dimTarget = 0f;
+        if (readHintText != null) readHintText.gameObject.SetActive(false);
         if (inspectHintText != null) inspectHintText.gameObject.SetActive(false);
     }
+    public void SetReadHint(bool value)
+    {
+        if (readHintText != null) readHintText.gameObject.SetActive(value);
+    }
 
+    public void SetOpenedHint(bool opened)
+    {
+        if (inspectHintText == null) return;
+        if (opened) inspectHintText.text = string.IsNullOrEmpty(inspectHintOpened) ? "Press Esc to close book" : inspectHintOpened;
+        else inspectHintText.text = string.IsNullOrEmpty(inspectHintDefault) ? "Press Esc to back" : inspectHintDefault;
+    }
     void CreateDim()
     {
         var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -257,6 +304,17 @@ public class Bookshelf : MonoBehaviour
 
     void LateUpdate()
     {
+        if (promptText != null)
+        {
+            bool show = playerInRange && !isZoomed && !returning;
+            if (show)
+            {
+                Vector3 sp = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * heightOffset);
+                if (sp.z <= 0f) show = false;   // rak di belakang kamera
+                else promptText.transform.position = sp;
+            }
+            if (promptText.gameObject.activeSelf != show) promptText.gameObject.SetActive(show);
+        }
         if (dimQuad == null) return;
         dimAlpha = Mathf.MoveTowards(dimAlpha, dimTarget, Time.deltaTime * dimFadeSpeed);
         dimMat.color = new Color(0f, 0f, 0f, dimAlpha);
