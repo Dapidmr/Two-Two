@@ -1,19 +1,20 @@
-Shader "Custom/PageLens"
+Shader "Custom/PageLensSimple"
 {
     Properties
     {
         _GibberishTex ("Gibberish", 2D) = "white" {}
-        _ReadableTex ("Readable", 2D) = "white" {}
-        _LensUV ("Lens UV", Vector) = (0.5, 0.5, 0, 0)
-        _LensRadius ("Lens Radius", Float) = 0.12
-        _LensOn ("Lens On", Float) = 0
-        _Aspect ("Aspect (lebar/tinggi)", Float) = 0.75
+        _ReadableTex  ("Readable", 2D) = "white" {}
+        _Aspect       ("Aspect (width/height)", Float) = 0.71
+        _LensUV       ("Lens UV", Vector) = (0.5, 0.5, 0, 0)
+        _LensRadius   ("Lens Radius", Float) = 0.15
+        _LensOn       ("Lens On", Float) = 0
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
         Pass
         {
+            Name "Unlit"
             Tags { "LightMode"="UniversalForward" }
             Cull Off
 
@@ -26,29 +27,36 @@ Shader "Custom/PageLens"
             TEXTURE2D(_ReadableTex);  SAMPLER(sampler_ReadableTex);
 
             CBUFFER_START(UnityPerMaterial)
+                float4 _GibberishTex_ST;
+                float4 _ReadableTex_ST;
+                float  _Aspect;
                 float4 _LensUV;
-                float _LensRadius;
-                float _LensOn;
-                float _Aspect;
+                float  _LensRadius;
+                float  _LensOn;
             CBUFFER_END
 
-            struct Attributes { float4 posOS : POSITION; float2 uv : TEXCOORD0; };
-            struct Varyings   { float4 posCS : SV_POSITION; float2 uv : TEXCOORD0; };
+            struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
+            struct Varyings   { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; };
 
-            Varyings vert(Attributes IN)
+            Varyings vert (Attributes v)
             {
-                Varyings OUT;
-                OUT.posCS = TransformObjectToHClip(IN.posOS.xyz);
-                OUT.uv = IN.uv;
-                return OUT;
+                Varyings o;
+                o.positionCS = TransformObjectToHClip(v.positionOS.xyz);
+                o.uv = v.uv;
+                return o;
             }
 
-            half4 frag(Varyings IN) : SV_Target
+            half4 frag (Varyings i) : SV_Target
             {
-                half4 g = SAMPLE_TEXTURE2D(_GibberishTex, sampler_GibberishTex, IN.uv);
-                half4 r = SAMPLE_TEXTURE2D(_ReadableTex, sampler_ReadableTex, IN.uv);
-                float2 d = (IN.uv - _LensUV.xy) * float2(_Aspect, 1.0);
-                float inside = (1.0 - smoothstep(_LensRadius * 0.9, _LensRadius, length(d))) * _LensOn;
+                half4 g = SAMPLE_TEXTURE2D(_GibberishTex, sampler_GibberishTex, i.uv);
+                half4 r = SAMPLE_TEXTURE2D(_ReadableTex,  sampler_ReadableTex,  i.uv);
+
+                float2 d = i.uv - _LensUV.xy;
+                d.x *= _Aspect;
+                float dist = length(d);
+
+                float inside = (1.0 - smoothstep(_LensRadius - 0.005, _LensRadius, dist)) * _LensOn;
+
                 return lerp(g, r, inside);
             }
             ENDHLSL

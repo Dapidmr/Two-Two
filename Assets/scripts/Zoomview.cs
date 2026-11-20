@@ -9,75 +9,81 @@ using TMPro;
 // Dipakai untuk radio, buku, rak, Pandora, dan objek lain. Tidak bergantung pada script Bookshelf.
 // Taruh script ini di objek yang punya Box Collider (Is Trigger) sebagai area deteksi.
 // Mendukung kamera tetap maupun first person.
+//
+// BARU: FocusOn() / Unfocus() untuk zoom level 2 (dipakai PandoraController).
+// Kalau tidak dipanggil, perilaku sama persis seperti sebelumnya.
 public class ZoomView : MonoBehaviour
 {
     [Header("UI")]
-    public TextMeshProUGUI promptText;      // tulisan "Tekan E"
+    public TextMeshProUGUI promptText;
     public float heightOffset = 1.5f;
 
     [Header("Kamera")]
-    public Transform zoomPoint;             // titik tujuan kamera (di depan benda). Kamera diam di sini.
+    public Transform zoomPoint;
     public float cameraSpeed = 5f;
-    public float zoomFieldOfView = 0f;      // 0 = tidak diubah. Isi 25-40 untuk mengurangi efek melar/gepeng saat benda berputar.
+    public float zoomFieldOfView = 0f;
 
     [Header("First person")]
-    public bool requireFacing = true;       // true = pemain harus menghadap objek untuk bisa menekan E
-    public float facingAngle = 60f;         // seberapa miring dari tengah layar (derajat) masih dianggap menghadap
+    public bool requireFacing = true;
+    public float facingAngle = 60f;
 
     [Header("Kontrol di sisi belakang benda")]
-    public bool blockHiddenControls = true;    // true = tombol yang tertutup badan benda tidak bisa diklik (misal tombol di belakang radio saat dilihat dari depan)
-    public bool autoBodyBlocker = true;        // true = bentuk badan benda dicari otomatis sebagai penghalang (hanya untuk benda yang bisa diputar)
-    public Collider[] bodyBlockers;            // opsional: collider badan benda yang kamu pilih sendiri
-    public float occlusionTolerance = 0.02f;   // kontrol yang menempel rata pada badan tetap bisa diklik
+    public bool blockHiddenControls = true;
+    public bool autoBodyBlocker = true;
+    public Collider[] bodyBlockers;
+    public float occlusionTolerance = 0.02f;
 
     [Header("Memutar benda (digeser)")]
     public bool allowRotate = true;
-    public Transform rotateTarget;          // benda yang diputar. Kosong = objek ini sendiri.
-    public Transform pivot;                 // pusat putaran. Kosong = pusat benda dihitung otomatis.
-    public float dragSensitivity = 0.4f;    // klik-tahan-geser (derajat per pixel)
-    public float swipeSensitivity = 0.15f;  // geser dua jari di trackpad
-    [Range(0f, 1f)] public float momentum = 0.35f;  // 0 = berhenti langsung, makin besar makin meluncur
-    public float spinDamping = 6f;          // makin besar, makin cepat berhenti meluncur
-    public bool invertX = false;            // centang kalau arah kiri-kanan terbalik
-    public bool invertY = false;            // centang kalau arah atas-bawah terbalik
-    public bool resetOnExit = true;         // benda kembali ke posisi awal saat keluar
+    public Transform rotateTarget;
+    public Transform pivot;
+    public float dragSensitivity = 0.4f;
+    public float swipeSensitivity = 0.15f;
+    [Range(0f, 1f)] public float momentum = 0.35f;
+    public float spinDamping = 6f;
+    public bool invertX = false;
+    public bool invertY = false;
+    public bool resetOnExit = true;
     public float resetSpeed = 6f;
-    public bool limitPitch = false;         // true = putaran atas-bawah dibatasi
-    public float maxPitch = 90f;            // batas atas-bawah (derajat), dipakai kalau Limit Pitch aktif
-    public bool lockToSingleAxis = true;    // true = satu geseran hanya satu arah (kiri-kanan ATAU atas-bawah)
-    public float axisDecidePixels = 6f;     // geseran awal sejauh ini menentukan arahnya
+    public bool limitPitch = false;
+    public float maxPitch = 90f;
+    public bool lockToSingleAxis = true;
+    public float axisDecidePixels = 6f;
 
     [Header("Kontrol di dalam tampilan ini")]
-    public Collider[] controlColliders;     // knob, tombol, buku, dll. Hanya aktif saat zoom.
+    public Collider[] controlColliders;
 
     [Header("Player")]
-    public MonoBehaviour playerController;  // script gerak player, dimatikan saat zoom dan dinyalakan lagi setelah kamera kembali
-    public Renderer[] playerRenderers;      // mesh player yang disembunyikan saat zoom (kosongkan untuk first person)
+    public MonoBehaviour playerController;
+    public Renderer[] playerRenderers;
 
     [Header("Sembunyikan saat zoom")]
-    public GameObject[] hideDuringZoom;     // objek utuh yang disembunyikan saat zoom (misal Table)
+    public GameObject[] hideDuringZoom;
 
     [Header("Keluar dari zoom")]
-    public bool allowExit = true;           // false = pemain tidak bisa keluar (diatur script lain)
+    public bool allowExit = true;
 
     [Header("Event")]
     public UnityEvent onEnter;
     public UnityEvent onExit;
 
-    // Hanya untuk dibaca script lain
     public bool IsZoomed { get { return isZoomed; } }
 
-    // ---- Daftar semua ZoomView, supaya hanya satu yang bisa ditekan E (yang paling dihadap) ----
+    // BARU: true kalau kamera sedang fokus ke bagian tertentu (zoom level 2)
+    public bool IsFocused { get { return focused; } }
+    // BARU: dipanggil saat fokus selesai (Esc/E atau keluar dari zoom)
+    public event System.Action Unfocused;
+
     private static readonly List<ZoomView> instances = new List<ZoomView>();
     private static ZoomView bestTarget;
     private static int bestFrame = -1;
 
     private bool playerInRange = false;
     private bool isZoomed = false;
-    private bool returning = false;         // kamera sedang kembali ke posisi awal
-    private bool resetting = false;         // benda sedang kembali ke rotasi awal
-    private bool promptOwned = false;       // true = tulisan "Tekan E" sedang ditampilkan oleh objek ini
-    private readonly HashSet<Collider> bodyBlockerSet = new HashSet<Collider>();   // collider yang menghalangi klik
+    private bool returning = false;
+    private bool resetting = false;
+    private bool promptOwned = false;
+    private readonly HashSet<Collider> bodyBlockerSet = new HashSet<Collider>();
 
     private Transform cam;
     private Camera camComp;
@@ -86,24 +92,33 @@ public class ZoomView : MonoBehaviour
     private Quaternion camOriginalRot;
     private Renderer focusRenderer;
 
-    // Pose kamera saat zoom (dicatat sekali waktu masuk, jadi tidak ikut berputar bersama benda)
+    // Kamera dilepas dari Capsule saat zoom, Rigidbody dibekukan
+    private Transform camParent;
+    private bool camDetached = false;
+    private Rigidbody playerRb;
+    private bool playerRbWasKinematic;
+
     private Vector3 viewPos;
     private Quaternion viewRot;
 
-    // Pose awal benda
     private Vector3 origPos;
     private Quaternion origRot;
     private Vector3 pivotPos;
 
+    // BARU: status fokus section
+    private bool focused = false;
+    private float focusFov = 0f;
+    private bool fovTouched = false;    // true kalau ZoomView ini yang mengubah FOV kamera
+
     private bool dragging = false;
-    private int dragAxis = 0;               // 0 = belum ditentukan, 1 = kiri-kanan, 2 = atas-bawah
+    private int dragAxis = 0;
     private Vector2 dragAccumPx = Vector2.zero;
     private int scrollAxis = 0;
     private float lastScrollTime = -10f;
     private readonly List<Renderer> hiddenRenderers = new List<Renderer>();
-    private Vector2 velocity = Vector2.zero;   // derajat per detik
-    private float yaw = 0f;                    // putaran kiri-kanan (derajat)
-    private float pitch = 0f;                  // putaran atas-bawah (derajat)
+    private Vector2 velocity = Vector2.zero;
+    private float yaw = 0f;
+    private float pitch = 0f;
 
     void OnEnable()
     {
@@ -117,8 +132,11 @@ public class ZoomView : MonoBehaviour
         if (promptOwned && promptText != null) promptText.gameObject.SetActive(false);
         promptOwned = false;
 
-        // Jangan sampai pemain terkunci kalau objek ini dimatikan saat zoom
-        if ((isZoomed || returning) && playerController != null) playerController.enabled = true;
+        if (isZoomed || returning)
+        {
+            RestorePlayerAndCamera();
+            if (playerController != null) playerController.enabled = true;
+        }
     }
 
     void Start()
@@ -130,7 +148,6 @@ public class ZoomView : MonoBehaviour
         camOriginalRot = cam.rotation;
         if (rotateTarget == null) rotateTarget = transform;
 
-        // Kalau slot Player Controller kosong, cari pengendali first person secara otomatis
         if (playerController == null) playerController = FindFirstObjectByType<FirstPersonController>();
 
         focusRenderer = rotateTarget.GetComponentInChildren<Renderer>();
@@ -149,11 +166,9 @@ public class ZoomView : MonoBehaviour
     void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag("Player")) return;
-        if (isZoomed) return;   // saat benda berputar, area deteksi ikut berputar. Abaikan.
+        if (isZoomed) return;
         playerInRange = false;
     }
-
-    // ---------- Memilih objek yang sedang dihadap ----------
 
     Vector3 FocusPoint()
     {
@@ -167,11 +182,10 @@ public class ZoomView : MonoBehaviour
         return Vector3.Angle(cam.forward, to);
     }
 
-    // Dari semua ZoomView yang dalam jangkauan dan dihadap, pilih yang paling lurus di tengah layar
     static ZoomView ComputeBest()
     {
         foreach (ZoomView z in instances)
-            if (z.isZoomed || z.returning || z.resetting) return null;   // sedang ada yang aktif
+            if (z.isZoomed || z.returning || z.resetting) return null;
 
         ZoomView best = null;
         float bestAngle = float.MaxValue;
@@ -198,7 +212,7 @@ public class ZoomView : MonoBehaviour
         if (show)
         {
             Vector3 sp = camComp.WorldToScreenPoint(transform.position + Vector3.up * heightOffset);
-            if (sp.z > 0f)   // hanya kalau objek ada di depan kamera
+            if (sp.z > 0f)
             {
                 promptText.gameObject.SetActive(true);
                 promptText.transform.position = sp;
@@ -213,8 +227,6 @@ public class ZoomView : MonoBehaviour
             promptOwned = false;
         }
     }
-
-    // ---------- Update ----------
 
     void Update()
     {
@@ -234,18 +246,32 @@ public class ZoomView : MonoBehaviour
 
         if (canInteract && ePressed)
             EnterZoom();
+        else if (isZoomed && focused && (ePressed || escPressed))
+            Unfocus();                                  // BARU: Esc/E dulu kembali ke tampilan box
         else if (isZoomed && allowExit && (ePressed || escPressed))
             ExitZoom();
 
         if (isZoomed)
         {
-            UpdateRotate();
+            // BARU: saat fokus, benda tidak bisa diputar (hanya dikembalikan ke posisi awal)
+            if (focused)
+            {
+                if (resetting) UpdateReset();
+            }
+            else
+            {
+                UpdateRotate();
+            }
 
             cam.position = Vector3.Lerp(cam.position, viewPos, Time.deltaTime * cameraSpeed);
             cam.rotation = Quaternion.Slerp(cam.rotation, viewRot, Time.deltaTime * cameraSpeed);
 
-            if (zoomFieldOfView > 0f && !camComp.orthographic)
-                camComp.fieldOfView = Mathf.Lerp(camComp.fieldOfView, zoomFieldOfView, Time.deltaTime * cameraSpeed);
+            float targetFov = (focused && focusFov > 0f) ? focusFov : zoomFieldOfView;
+            if (targetFov > 0f && !camComp.orthographic)
+            {
+                fovTouched = true;
+                camComp.fieldOfView = Mathf.Lerp(camComp.fieldOfView, targetFov, Time.deltaTime * cameraSpeed);
+            }
         }
         else
         {
@@ -254,14 +280,18 @@ public class ZoomView : MonoBehaviour
                 cam.position = Vector3.Lerp(cam.position, camOriginalPos, Time.deltaTime * cameraSpeed);
                 cam.rotation = Quaternion.Slerp(cam.rotation, camOriginalRot, Time.deltaTime * cameraSpeed);
 
-                if (zoomFieldOfView > 0f && !camComp.orthographic)
+                // FOV hanya dikembalikan kalau ZoomView ini yang mengubahnya
+                if (fovTouched && !camComp.orthographic)
                     camComp.fieldOfView = Mathf.Lerp(camComp.fieldOfView, origFov, Time.deltaTime * cameraSpeed);
 
-                if (Vector3.Distance(cam.position, camOriginalPos) < 0.01f)
+                // Posisi DAN rotasi harus sudah dekat, supaya tidak "snap" di akhir
+                if (Vector3.Distance(cam.position, camOriginalPos) < 0.01f &&
+                    Quaternion.Angle(cam.rotation, camOriginalRot) < 0.5f)
                 {
                     cam.position = camOriginalPos;
                     cam.rotation = camOriginalRot;
-                    if (zoomFieldOfView > 0f && !camComp.orthographic) camComp.fieldOfView = origFov;
+                    if (fovTouched && !camComp.orthographic) camComp.fieldOfView = origFov;
+                    fovTouched = false;
                     returning = false;
                     OnCameraReturned();
                 }
@@ -271,21 +301,91 @@ public class ZoomView : MonoBehaviour
         }
     }
 
-    // Setelah kamera kembali: pemain boleh bergerak lagi (supaya tidak berebut kamera dengan script gerak)
+    // Bekukan Rigidbody pemain dan lepas kamera dari Capsule
+    void FreezePlayerAndDetachCamera()
+    {
+        if (playerRb == null && playerController != null)
+            playerRb = playerController.GetComponent<Rigidbody>();
+
+        if (playerRb != null)
+        {
+            playerRbWasKinematic = playerRb.isKinematic;
+            if (!playerRb.isKinematic)
+            {
+                playerRb.linearVelocity = Vector3.zero;
+                playerRb.angularVelocity = Vector3.zero;
+            }
+            playerRb.isKinematic = true;
+        }
+
+        if (cam.parent != null && !camDetached)
+        {
+            camParent = cam.parent;
+            cam.SetParent(null, true);
+            camDetached = true;
+        }
+    }
+
+    void RestorePlayerAndCamera()
+    {
+        if (camDetached && cam != null)
+        {
+            cam.SetParent(camParent, true);
+            camDetached = false;
+            camParent = null;
+        }
+        if (playerRb != null) playerRb.isKinematic = playerRbWasKinematic;
+    }
+
     void OnCameraReturned()
     {
+        RestorePlayerAndCamera();
         if (playerController != null) playerController.enabled = true;
         SetPlayerVisible(true);
     }
 
+    // ==================== BARU: zoom level 2 ====================
+
+    // Pindahkan kamera ke titik lain (misal ke satu section benda). Box dikembalikan ke posisi awal.
+    // Titik kamera harus ditentukan saat benda belum diputar, dan bukan anak dari benda yang diputar.
+    public void FocusOn(Transform point, float fov)
+    {
+        if (!isZoomed || point == null) return;
+
+        focused = true;
+        focusFov = fov;
+        dragging = false;
+        velocity = Vector2.zero;
+        yaw = Mathf.DeltaAngle(0f, yaw);
+        pitch = Mathf.DeltaAngle(0f, pitch);
+        resetting = true;
+        viewPos = point.position;
+        viewRot = point.rotation;
+    }
+
+    // Kembali ke tampilan zoom biasa (bisa diputar lagi)
+    public void Unfocus()
+    {
+        if (!focused) return;
+
+        focused = false;
+        focusFov = 0f;
+        resetting = false;
+        viewPos = zoomPoint.position;
+        viewRot = zoomPoint.rotation;
+
+        if (Unfocused != null) Unfocused();
+    }
+
+    // ============================================================
+
     void UpdateRotate()
     {
         float dt = Time.deltaTime;
-        Vector2 input = Vector2.zero;   // derajat pada frame ini
+        Vector2 input = Vector2.zero;
 
         if (allowRotate)
         {
-            // Klik-tahan-geser (tidak dimulai kalau kursor di atas knob atau tombol)
             if (Mouse.current.leftButton.wasPressedThisFrame && !IsOverControl())
             {
                 dragging = true;
@@ -303,7 +403,6 @@ public class ZoomView : MonoBehaviour
                 {
                     if (dragAxis == 0)
                     {
-                        // Tunggu gerakan awal untuk menentukan arah: kiri-kanan atau atas-bawah
                         dragAccumPx += raw;
                         if (dragAccumPx.magnitude >= axisDecidePixels)
                         {
@@ -324,13 +423,11 @@ public class ZoomView : MonoBehaviour
                 input += raw * dragSensitivity;
             }
 
-            // Geser dua jari di trackpad / scroll
             Vector2 sc = Mouse.current.scroll.ReadValue();
             if (sc.sqrMagnitude > 0f)
             {
                 if (lockToSingleAxis)
                 {
-                    // Satu gesekan = satu arah. Gesekan baru dimulai setelah jeda sebentar.
                     if (Time.time - lastScrollTime > 0.2f) scrollAxis = 0;
                     if (scrollAxis == 0) scrollAxis = Mathf.Abs(sc.x) >= Mathf.Abs(sc.y) ? 1 : 2;
                     sc = scrollAxis == 1 ? new Vector2(sc.x, 0f) : new Vector2(0f, sc.y);
@@ -348,14 +445,12 @@ public class ZoomView : MonoBehaviour
         }
         else
         {
-            // Meluncur pelan lalu berhenti setelah dilepas
             velocity = Vector2.Lerp(velocity, Vector2.zero, dt * spinDamping);
             applied = velocity * dt;
         }
 
         if (applied.sqrMagnitude <= 0f || rotateTarget == null) return;
 
-        // Hanya dua sumbu: kiri-kanan (yaw) dan atas-bawah (pitch). Tidak ada miring ke samping (roll).
         yaw += (invertX ? 1f : -1f) * applied.x;
         pitch += (invertY ? -1f : 1f) * applied.y;
         if (limitPitch) pitch = Mathf.Clamp(pitch, -maxPitch, maxPitch);
@@ -363,13 +458,11 @@ public class ZoomView : MonoBehaviour
         ApplyPose();
     }
 
-    // Hitung pose benda dari dua sudut (yaw dan pitch) terhadap pose awalnya
     void ApplyPose()
     {
         Vector3 camUp = viewRot * Vector3.up;
         Vector3 camRight = viewRot * Vector3.right;
 
-        // Putar kiri-kanan dulu, lalu atas-bawah. Urutan ini yang mencegah benda miring ke samping.
         Quaternion delta = Quaternion.AngleAxis(pitch, camRight) * Quaternion.AngleAxis(yaw, camUp);
 
         rotateTarget.rotation = delta * origRot;
@@ -405,8 +498,6 @@ public class ZoomView : MonoBehaviour
         return false;
     }
 
-    // ---------- Kontrol yang tertutup badan benda ----------
-
     bool IsControlObject(Transform t)
     {
         foreach (Collider c in controlColliders)
@@ -415,7 +506,6 @@ public class ZoomView : MonoBehaviour
         return false;
     }
 
-    // Menyiapkan penghalang klik: badan benda (bentuk terbesar selain kontrol) dijadikan collider
     void SetupBlockers()
     {
         bodyBlockerSet.Clear();
@@ -425,7 +515,6 @@ public class ZoomView : MonoBehaviour
             foreach (Collider c in bodyBlockers)
                 if (c != null) bodyBlockerSet.Add(c);
 
-        // Otomatis hanya untuk benda yang bisa diputar (di situ tombol bisa berada di sisi belakang)
         if (!autoBodyBlocker || !allowRotate) return;
 
         Renderer best = null;
@@ -444,7 +533,6 @@ public class ZoomView : MonoBehaviour
         }
         if (best == null) return;
 
-        // Pakai collider yang sudah ada kalau ada, kalau belum buat dari bentuk modelnya
         Collider body = best.GetComponent<Collider>();
         if (body == null)
         {
@@ -460,7 +548,6 @@ public class ZoomView : MonoBehaviour
         Debug.Log("[ZoomView] Penghalang klik (badan benda): " + best.name);
     }
 
-    // true = kontrol ini terlihat dan boleh diklik. false = tertutup badan benda dari sudut kamera sekarang.
     public bool IsControlVisible(Collider control)
     {
         if (!blockHiddenControls || control == null || camComp == null || bodyBlockerSet.Count == 0) return true;
@@ -478,7 +565,7 @@ public class ZoomView : MonoBehaviour
         }
 
         if (controlDist == float.MaxValue) return true;
-        return blockerDist >= controlDist - occlusionTolerance;   // badan benda tidak ada di depan kontrol
+        return blockerDist >= controlDist - occlusionTolerance;
     }
 
     Vector3 ComputeCenter()
@@ -501,15 +588,15 @@ public class ZoomView : MonoBehaviour
         velocity = Vector2.zero;
         yaw = 0f;
         pitch = 0f;
+        focused = false;                // BARU
+        focusFov = 0f;                  // BARU
 
-        // Catat pose awal benda dan titik kamera (sekali, sebelum benda diputar)
         origPos = rotateTarget.position;
         origRot = rotateTarget.rotation;
         pivotPos = ComputeCenter();
         viewPos = zoomPoint.position;
         viewRot = zoomPoint.rotation;
 
-        // Pose kamera sekarang = posisi kamera saat berdiri (first person) atau kamera tetap
         camOriginalPos = cam.position;
         camOriginalRot = cam.rotation;
 
@@ -519,7 +606,8 @@ public class ZoomView : MonoBehaviour
             promptOwned = false;
         }
 
-        // Matikan gerak pemain selama zoom (OnDisable-nya membuat kursor bebas)
+        FreezePlayerAndDetachCamera();
+
         if (playerController != null) playerController.enabled = false;
         SetPlayerVisible(false);
         HideObjects();
@@ -533,6 +621,14 @@ public class ZoomView : MonoBehaviour
 
     void ExitZoom()
     {
+        // BARU: pastikan status fokus bersih (pemakai Unfocused ikut diberi tahu)
+        if (focused)
+        {
+            focused = false;
+            focusFov = 0f;
+            if (Unfocused != null) Unfocused();
+        }
+
         returning = true;
         isZoomed = false;
         dragging = false;
@@ -546,7 +642,6 @@ public class ZoomView : MonoBehaviour
         SetControlsInteractable(false);
         ShowObjects();
 
-        // Pemain baru boleh bergerak lagi setelah kamera kembali (lihat OnCameraReturned)
         onExit.Invoke();
     }
 
@@ -589,7 +684,6 @@ public class ZoomView : MonoBehaviour
             if (r != null) r.enabled = value;
     }
 
-    // Dipanggil setelah benda dipindah dari luar, supaya pose awal dan pusat putaran dicatat ulang
     public void RebaseOrigin()
     {
         if (rotateTarget == null) return;
@@ -600,6 +694,4 @@ public class ZoomView : MonoBehaviour
         pitch = 0f;
         velocity = Vector2.zero;
     }
-
 }
-

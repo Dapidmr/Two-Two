@@ -80,6 +80,10 @@ public class RadioTuner : MonoBehaviour
     public UnityEvent onPasswordAccepted;          // dipanggil sekali saat kode yang dimasukkan benar
     public UnityEvent onPoweredOff;                // dipanggil saat radio benar-benar dimatikan (misal untuk membuat buku jatuh)
 
+    [Header("Keypad (tombol masuk)")]
+    public RadioKeypad keypad;                     // kosongkan kalau RadioKeypad ada di objek yang sama
+    public float wrongReleaseDelay = 0.5f;         // kode salah: tombol tetap masuk sebentar, lalu naik lagi
+
     [Header("Tombol power")]
     public float offFrequency = 105f;    // radio hanya bisa dimatikan di frekuensi ini (MHz)
     public float powerTolerance = 0.05f; // 0.05 = harus pas di angka yang tampil
@@ -127,6 +131,7 @@ public class RadioTuner : MonoBehaviour
     {
         if (volumeKnob != null) knobCollider = volumeKnob.GetComponent<Collider>();
         if (zoomView == null) zoomView = GetComponent<ZoomView>();
+        if (keypad == null) keypad = GetComponent<RadioKeypad>();
 
         // Atur langkah knob dan posisi awal
         if (volumeKnob != null)
@@ -210,7 +215,13 @@ public class RadioTuner : MonoBehaviour
             return;
         }
 
-        if (key == "*") { entered = ""; return; }   // * = hapus yang sudah diketik
+        if (key == "*")
+        {
+            // * = hapus yang sudah diketik, semua tombol naik lagi
+            entered = "";
+            if (keypad != null) keypad.ReleaseAll();
+            return;
+        }
         if (key == "#") return;                      // # tidak dipakai
 
         entered += key;
@@ -221,12 +232,14 @@ public class RadioTuner : MonoBehaviour
             {
                 passwordAccepted = true;
                 ShowMessage("Kode benar. Radio sekarang bisa dimatikan", 3f);
+                if (keypad != null) keypad.LockKeys();   // semua tombol tetap masuk dan terkunci
                 onPasswordAccepted.Invoke();
             }
             else
             {
                 entered = "";
                 ShowMessage("Kode salah");
+                if (keypad != null) keypad.ReleaseAllAfter(wrongReleaseDelay);   // tombol naik lagi
             }
         }
     }

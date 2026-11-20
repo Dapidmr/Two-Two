@@ -1,9 +1,11 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 // Mengubah keycap di radio menjadi tombol yang bisa ditekan untuk memasukkan kode.
 // Pasang di objek Radio (induk) yang punya ZoomView dan RadioTuner.
 // Collider dan efek tekan ditambahkan otomatis saat game dimulai.
+// Tombol bergerak MASUK searah pandangan kamera zoom (Zoom Point), bukan turun ke bawah.
 public class RadioKeypad : MonoBehaviour
 {
     [System.Serializable]
@@ -24,14 +26,43 @@ public class RadioKeypad : MonoBehaviour
     public string keys = "123456789*0#";          // urut sesuai nama (Keycaps.001, .002, ...)
 
     [Header("Efek tekan keycap")]
-    public Vector3 pressDirection = Vector3.down;  // arah keycap turun (sumbu lokal objek induknya)
+    [Tooltip("Arah tekan = arah pandang titik ini. Kosongkan = pakai Zoom Point dari ZoomView.")]
+    public Transform directionReference;
+    public bool flipDirection = false;      // centang kalau tombolnya bergerak ke arah sebaliknya
+    public Vector3 fallbackDirection = Vector3.down;     // sumbu lokal radio, kalau tidak ada referensi
     public float pressFraction = 0.5f;
     public float pressSpeed = 25f;
+
+    [Header("Tombol tetap masuk")]
+    [Tooltip("true = angka yang ditekan tetap masuk sampai kode salah / ditekan *, dan terkunci kalau kode benar.")]
+    public bool latchKeys = true;
+    [Tooltip("Tombol dengan simbol ini tidak ikut tertahan (naik lagi setelah ditekan).")]
+    public string momentaryKeys = "*#";
+
+    private readonly List<KeycapButton> buttons = new List<KeycapButton>();
+    private bool locked = false;
+    private bool releasing = false;
+
+    Vector3 PressWorldDirection()
+    {
+        Transform r = directionReference;
+        if (r == null && zoomView != null) r = zoomView.zoomPoint;
+        if (r == null)
+        {
+            ZoomView zv = GetComponent<ZoomView>();
+            if (zv != null) r = zv.zoomPoint;
+        }
+
+        Vector3 d = r != null ? r.forward : transform.TransformDirection(fallbackDirection);
+        return flipDirection ? -d : d;
+    }
 
     void Awake()
     {
         if (tuner == null) tuner = GetComponent<RadioTuner>();
         if (zoomView == null) zoomView = GetComponent<ZoomView>();
+
+        Vector3 dir = PressWorldDirection();
 
         List<KeyEntry> entries = GetEntries();
         List<Collider> newColliders = new List<Collider>();
@@ -46,15 +77,18 @@ public class RadioKeypad : MonoBehaviour
             c.enabled = false;
             newColliders.Add(c);
 
+            // Angka ikut tertahan; * dan # (atau tombol tanpa angka) naik lagi
+            bool isMomentary = string.IsNullOrEmpty(e.key) || momentaryKeys.Contains(e.key);
+            bool latch = latchKeys && !isMomentary;
+
             // Efek tekan + kirim tombol yang ditekan ke RadioTuner
-            PressButtonEffect fx = t.gameObject.AddComponent<PressButtonEffect>();
-            fx.pressDirection = pressDirection;
-            fx.pressFraction = pressFraction;
-            fx.pressSpeed = pressSpeed;
+            KeycapButton b = t.gameObject.AddComponent<KeycapButton>();
+            b.Setup(c, dir, pressFraction, pressSpeed, latch, true);   // true = angka kembar (misal 34511) boleh ditekan lagi
+            buttons.Add(b);
 
             string captured = e.key;
             if (!string.IsNullOrEmpty(captured))
-                fx.onPressed.AddListener(() => { if (tuner != null) tuner.EnterKey(captured); });
+                b.onPressed.AddListener(() => { if (tuner != null) tuner.EnterKey(captured); });
         }
 
         // Daftarkan ke ZoomView supaya hanya bisa ditekan saat zoom, dan tidak ikut memutar radio
@@ -65,6 +99,41 @@ public class RadioKeypad : MonoBehaviour
             all.AddRange(newColliders);
             zoomView.controlColliders = all.ToArray();
         }
+    }
+
+    // Naikkan semua tombol sekarang juga (dipanggil RadioTuner saat * ditekan)
+    public void ReleaseAll()
+    {
+        foreach (KeycapButton b in buttons) b.Release();
+    }
+
+    // Tombol terkunci sebentar, lalu semua naik lagi (dipanggil RadioTuner saat kode salah)
+    public void ReleaseAllAfter(float delay)
+    {
+        if (releasing) return;
+        StartCoroutine(ReleaseRoutine(delay));
+    }
+
+    IEnumerator ReleaseRoutine(float delay)
+    {
+        releasing = true;
+        SetInteractable(false);
+        yield return new WaitForSeconds(delay);
+        ReleaseAll();
+        releasing = false;
+        if (!locked) SetInteractable(true);
+    }
+
+    // Kode benar: tombol tetap seperti sekarang dan tidak bisa ditekan lagi
+    public void LockKeys()
+    {
+        locked = true;
+        SetInteractable(false);
+    }
+
+    void SetInteractable(bool value)
+    {
+        foreach (KeycapButton b in buttons) b.interactable = value;
     }
 
     // Daftar keycap yang dipakai: dari Key Map kalau diisi, kalau kosong dicari otomatis dari nama
@@ -137,7 +206,7 @@ public class RadioKeypad : MonoBehaviour
         return r != null ? r.bounds.center : t.position;
     }
 
-    // Saat Radio dipilih: angka tiap keycap muncul di Scene view, plus garis kuning arah turunnya
+    // Saat Radio dipilih: angka tiap keycap muncul di Scene view, plus garis kuning arah masuknya
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
@@ -150,18 +219,19 @@ public class RadioKeypad : MonoBehaviour
         style.alignment = TextAnchor.MiddleCenter;
 #endif
 
+        Vector3 d = PressWorldDirection().normalized;
+
         foreach (KeyEntry e in GetEntries())
         {
             Transform t = e.keycap;
             if (t == null) continue;
 
             Vector3 center = CenterOf(t);
-            Vector3 d = PressButtonEffect.DirWorld(t, pressDirection);
-            Gizmos.DrawLine(center, center + d * PressButtonEffect.PressDistance(t, d, pressFraction));
+            Gizmos.DrawLine(center, center + d * 0.1f);
 
 #if UNITY_EDITOR
             UnityEditor.Handles.Label(center, e.key, style);
 #endif
         }
     }
-}   
+}

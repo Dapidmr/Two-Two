@@ -118,8 +118,9 @@ public class BookFallEvent : MonoBehaviour
         GameObject book = bookToFall.gameObject;
         book.SetActive(true);
 
+        // MonocleLens tidak ikut dimatikan supaya lensa tetap jalan
         foreach (MonoBehaviour mb in book.GetComponents<MonoBehaviour>())
-            if (mb != null && mb != this && !(mb is BookAnimPlayer) && !(mb is ZoomView))
+            if (mb != null && mb != this && !(mb is BookAnimPlayer) && !(mb is ZoomView) && !(mb is MonocleLens))
                 mb.enabled = false;
 
         Collider bookCol = book.GetComponent<Collider>();
@@ -189,7 +190,6 @@ public class BookFallEvent : MonoBehaviour
         if (interactAfterLanding && fallStarted && !interactReady)
             CheckLanded();
 
-        // Titik kamera hanya diperbarui saat tidak zoom dan buku tidak sedang bergerak
         if (interactReady && zoomView != null && !zoomView.IsZoomed && moveRoutine == null)
             UpdateZoomPoint();
     }
@@ -271,8 +271,8 @@ public class BookFallEvent : MonoBehaviour
         zoomView.playerRenderers = playerRenderers != null ? playerRenderers : new Renderer[0];
         zoomView.hideDuringZoom = hideDuringZoom;
         zoomView.allowExit = true;
-        zoomView.resetOnExit = false;   // kembalinya buku diurus script ini
-        zoomView.allowRotate = false;   // buku tidak diputar mouse, halaman dibalik pakai panah
+        zoomView.resetOnExit = false;
+        zoomView.allowRotate = false;
 
         if (zoomView.onEnter == null) zoomView.onEnter = new UnityEvent();
         if (zoomView.onExit == null) zoomView.onExit = new UnityEvent();
@@ -335,8 +335,7 @@ public class BookFallEvent : MonoBehaviour
         zoomPointTf.rotation = Quaternion.LookRotation(center - zoomPointTf.position, Vector3.up);
     }
 
-    // ---------- Tampilan zoom: buku menghadap kamera ----------
-
+    // UBAH: jarak buku dihitung pakai FOV tujuan, bukan FOV sekarang
     void OnBookZoomEnter()
     {
         if (hideEverythingElse) HideOthers();
@@ -363,7 +362,8 @@ public class BookFallEvent : MonoBehaviour
         if (Mathf.Abs(Mathf.Sin(displayRoll * Mathf.Deg2Rad)) > 0.5f) { float t = h; h = w; w = t; }
 
         Camera c = Camera.main;
-        float tanV = Mathf.Tan(c.fieldOfView * 0.5f * Mathf.Deg2Rad);
+        float fov = zoomFieldOfView > 0f ? zoomFieldOfView : c.fieldOfView;
+        float tanV = Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad);
         float dist = Mathf.Max((h * 0.5f) / tanV, (w * 0.5f) / (tanV * c.aspect)) * fillMargin;
 
         Vector3 target = zoomPointTf.position + camFwd * dist;
@@ -440,8 +440,6 @@ public class BookFallEvent : MonoBehaviour
             if (r != null) r.enabled = true;
         hiddenOthers.Clear();
     }
-
-    // ---------- Pendukung ----------
 
     float FindFloorY(Collider bookCol, Transform shelfRoot)
     {
