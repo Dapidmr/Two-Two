@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;   // BARU
 using TMPro;
 
 // Sistem umum: tekan E dekat objek -> kamera zoom ke ZoomPoint.
@@ -39,7 +40,6 @@ public class ZoomView : MonoBehaviour
 
     [Header("Memutar benda (digeser)")]
     public bool allowRotate = true;
-    public bool debugDrag = false;   // centang sementara: Console menampilkan apa yang ada di bawah kursor saat klik
     public Transform rotateTarget;
     public Transform pivot;
     public float dragSensitivity = 0.4f;
@@ -78,14 +78,14 @@ public class ZoomView : MonoBehaviour
     public float inspectRadius = 0.2f;       // ukuran benda saat diangkat (radius, world unit)
     public float inspectMoveSpeed = 8f;
     public float rotateSpeed = 0.4f;         // derajat per pixel drag
+    public float liftUp = 0.05f;             // BARU: geser benda ke atas layar saat diangkat
     public bool faceCameraOnInspect = true;
     public Vector3 faceLocalAxis = Vector3.up;     // sumbu lokal benda yang menghadap kamera
     public Vector3 faceLocalUp = Vector3.right;    // sumbu lokal benda yang naik di layar
 
     [Header("Pick Up: latar gelap")]
-    public float dimMax = 0.75f;
+    public float dimMax = 0.6f;
     public float dimFadeSpeed = 4f;
-    public float dimGap = 0.05f;
 
     [Header("Pick Up: teks petunjuk (boleh pakai teks yang sama dengan rak)")]
     public TextMeshProUGUI inspectHintText;  // "Press Esc to back"
@@ -118,7 +118,6 @@ public class ZoomView : MonoBehaviour
         }
     }
 
-    // true kalau kamera sedang fokus ke bagian tertentu (zoom level 2)
     public bool IsFocused { get { return focused; } }
     public event System.Action Unfocused;
 
@@ -178,8 +177,9 @@ public class ZoomView : MonoBehaviour
     private Quaternion openRot, inspectTargetRot;
     private bool settlingRot = false;
     private bool readShown = false;
-    private Transform dimQuad;
-    private Material dimMat;
+
+    // UBAH: latar gelap pakai Image di Canvas full-screen
+    private Image dimImage;
     private float dimAlpha = 0f, dimTarget = 0f;
 
     void OnEnable()
@@ -201,9 +201,10 @@ public class ZoomView : MonoBehaviour
         }
     }
 
+    // UBAH
     void OnDestroy()
     {
-        if (dimQuad != null) Destroy(dimQuad.gameObject);
+        if (dimImage != null) Destroy(dimImage.canvas.gameObject);
     }
 
     void Start()
@@ -376,23 +377,12 @@ public class ZoomView : MonoBehaviour
         }
     }
 
+    // UBAH
     void LateUpdate()
     {
-        if (dimQuad == null) return;
-
+        if (dimImage == null) return;
         dimAlpha = Mathf.MoveTowards(dimAlpha, dimTarget, Time.deltaTime * dimFadeSpeed);
-        dimMat.color = new Color(0f, 0f, 0f, dimAlpha);
-
-        bool show = dimAlpha > 0.001f;
-        dimQuad.gameObject.SetActive(show);
-        if (show && camComp != null)
-        {
-            float dist = inspectDistance + inspectRadius + dimGap;
-            dimQuad.localPosition = new Vector3(0f, 0f, dist);
-            float h = 2f * dist * Mathf.Tan(camComp.fieldOfView * 0.5f * Mathf.Deg2Rad);
-            float w = h * camComp.aspect;
-            dimQuad.localScale = new Vector3(w * 1.2f, h * 1.2f, 1f);
-        }
+        dimImage.color = new Color(0f, 0f, 0f, dimAlpha);
     }
 
     void FreezePlayerAndDetachCamera()
@@ -495,23 +485,23 @@ public class ZoomView : MonoBehaviour
         SetOpenedHint(false);
         if (inspectHintText != null) inspectHintText.gameObject.SetActive(true);
 
-        if (dimQuad == null)
+        // UBAH: latar gelap = Image full-screen di Canvas
+        if (dimImage == null)
         {
-            var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            q.name = "ZoomViewDim";
-            Destroy(q.GetComponent<Collider>());
-            q.transform.SetParent(cam, false);
-            q.transform.localRotation = Quaternion.identity;
+            GameObject cgo = new GameObject("ZoomViewDimCanvas");
+            Canvas cv = cgo.AddComponent<Canvas>();
+            cv.renderMode = RenderMode.ScreenSpaceOverlay;
+            cv.sortingOrder = -10;   // di bawah teks petunjuk dan lensa
 
-            var r = q.GetComponent<MeshRenderer>();
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            r.receiveShadows = false;
-            dimMat = new Material(Shader.Find("Sprites/Default"));
-            dimMat.color = new Color(0f, 0f, 0f, 0f);
-            r.material = dimMat;
-
-            dimQuad = q.transform;
-            q.SetActive(false);
+            GameObject igo = new GameObject("Dim");
+            igo.transform.SetParent(cgo.transform, false);
+            dimImage = igo.AddComponent<Image>();
+            dimImage.color = new Color(0f, 0f, 0f, 0f);
+            dimImage.raycastTarget = false;
+            RectTransform rt = dimImage.rectTransform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
         }
         dimTarget = dimMax;
     }
@@ -593,7 +583,7 @@ public class ZoomView : MonoBehaviour
                     bookState = 3;
                     phase = Mathf.Min(1f, phase + closeSkip);
                 }
-                if (bookState != 0) esc = false;      // selama buku terbuka/animasi, jangan keluar
+                if (bookState != 0) esc = false;
             }
             else if (e && bookState == 0)
             {
@@ -656,7 +646,7 @@ public class ZoomView : MonoBehaviour
         }
         else if (settlingRot)
         {
-            inspectTargetRot = FaceRot(c);   // ikut arah kamera yang sedang bergerak
+            inspectTargetRot = FaceRot(c);
             t.rotation = Quaternion.Slerp(t.rotation, inspectTargetRot, dt * inspectMoveSpeed);
         }
 
@@ -665,7 +655,8 @@ public class ZoomView : MonoBehaviour
         Vector3 scaleT = targetScale * Mathf.Lerp(1f, openScaleMul, o);
         t.localScale = Vector3.Lerp(t.localScale, scaleT, dt * inspectMoveSpeed);
 
-        Vector3 center = c.position + c.forward * inspectDistance + c.up * (openUp * o);
+        // UBAH: ditambah liftUp
+        Vector3 center = c.position + c.forward * inspectDistance + c.up * (openUp * o + liftUp);
         Vector3 wantCenter = bookState != 0 ? CurrentLocalCenter() : localCenter;
         viewCenter = bookState != 0 ? wantCenter : Vector3.Lerp(viewCenter, wantCenter, dt * inspectMoveSpeed);
         Vector3 target = center - t.TransformVector(viewCenter);
@@ -805,42 +796,11 @@ public class ZoomView : MonoBehaviour
         if (controlColliders == null) return false;
 
         Ray ray = camComp.ScreenPointToRay(Mouse.current.position.ReadValue());
-
-        // 1. Kalau kursor tepat di atas SlidingCover, selalu boleh memutar radio.
-        //    Dicek langsung ke collider cover (bukan lewat jarak dengan collider lain),
-        //    jadi keycap, badan radio, atau IsControlVisible tidak bisa mengganggu.
-        foreach (Collider c in controlColliders)
-        {
-            if (c == null || !c.enabled) continue;
-            if (c.GetComponent<SlidingCover>() == null) continue;
-
-            RaycastHit ch;
-            if (c.Raycast(ray, out ch, 100f))
-            {
-                if (debugDrag) Debug.Log("[ZoomView] Kursor di atas cover '" + c.name + "' -> drag boleh memutar radio");
-                return false;
-            }
-        }
-
-        // 2. Selain cover: kontrol terdekat yang terlihat (knob, tombol power, keycap)
         RaycastHit[] hits = Physics.RaycastAll(ray, 100f, ~0, QueryTriggerInteraction.Ignore);
-        string found = "-";
-        float best = float.MaxValue;
         foreach (var h in hits)
-        {
-            if (System.Array.IndexOf(controlColliders, h.collider) < 0) continue;
-            if (!IsControlVisible(h.collider)) continue;
-            if (h.distance < best)
-            {
-                best = h.distance;
-                found = h.collider.name;
-            }
-        }
-
-        if (debugDrag)
-            Debug.Log("[ZoomView] Kontrol di bawah kursor: " + found + (best == float.MaxValue ? " (tidak ada -> radio berputar)" : " (radio TIDAK berputar)"));
-
-        return best != float.MaxValue;
+            if (System.Array.IndexOf(controlColliders, h.collider) >= 0 && IsControlVisible(h.collider))
+                return true;
+        return false;
     }
 
     bool IsControlObject(Transform t)

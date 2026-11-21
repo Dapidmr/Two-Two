@@ -151,7 +151,9 @@ public class MonocleLens : MonoBehaviour
                 }
             }
 
-            PageLensPage target = (front != null && front.monocleId == s.monocleId) ? front : null;
+            // UBAH: lensa hanya aktif kalau titik tengahnya berada di dalam halaman
+            bool inside = front != null && uv.x >= -0.05f && uv.x <= 1.05f && uv.y >= -0.05f && uv.y <= 1.05f;
+            PageLensPage target = (inside && front.monocleId == s.monocleId) ? front : null;
 
             float radius = radiusUV;
             if (target != null)

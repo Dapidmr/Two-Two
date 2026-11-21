@@ -8,6 +8,7 @@ Shader "Custom/PageLensSimple"
         _LensUV       ("Lens UV", Vector) = (0.5, 0.5, 0, 0)
         _LensRadius   ("Lens Radius", Float) = 0.15
         _LensOn       ("Lens On", Float) = 0
+        _TexST        ("Texture Tiling(xy) Offset(zw)", Vector) = (1, 1, 0, 0)
     }
     SubShader
     {
@@ -33,6 +34,7 @@ Shader "Custom/PageLensSimple"
                 float4 _LensUV;
                 float  _LensRadius;
                 float  _LensOn;
+                float4 _TexST;
             CBUFFER_END
 
             struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
@@ -48,8 +50,11 @@ Shader "Custom/PageLensSimple"
 
             half4 frag (Varyings i) : SV_Target
             {
-                half4 g = SAMPLE_TEXTURE2D(_GibberishTex, sampler_GibberishTex, i.uv);
-                half4 r = SAMPLE_TEXTURE2D(_ReadableTex,  sampler_ReadableTex,  i.uv);
+                // UV untuk texture (tiling + offset), UV asli tetap dipakai untuk posisi lensa
+                float2 tuv = i.uv * _TexST.xy + _TexST.zw;
+
+                half4 g = SAMPLE_TEXTURE2D(_GibberishTex, sampler_GibberishTex, tuv);
+                half4 r = SAMPLE_TEXTURE2D(_ReadableTex,  sampler_ReadableTex,  tuv);
 
                 float2 d = i.uv - _LensUV.xy;
                 d.x *= _Aspect;

@@ -7,23 +7,25 @@ using UnityEngine.Events;
 public class BookFallEvent : MonoBehaviour
 {
     [Header("Buku yang akan jatuh")]
-    public Transform bookToFall;          // drag Test Book
+    public Transform bookToFall;
 
     [Header("Pemicu")]
     public bool listenToRadio = true;
 
     [Header("Mode")]
     public bool useRealPhysics = true;
-    public Transform floorPosition;       // posisi + rotasi akhir buku berbaring di lantai
+    public Transform floorPosition;
 
     [Header("Fisika")]
     public float delay = 0f;
-    public float mass = 0.5f;
-    public Vector3 pushImpulse = new Vector3(0.5f, 0f, 0.3f);
-    public float spin = 0.5f;
+    public float mass = 1f;
+    public Vector3 pushImpulse = new Vector3(0.05f, 0f, 0.02f);
+    public float spin = 0.05f;
+    public float linearDamping = 1.5f;     // peredam gerak
+    public float angularDamping = 4f;      // peredam putaran
     public bool ignoreShelfCollision = true;
     public float shelfIgnoreTime = 0.4f;
-    public bool settleFlat = true;
+    public bool settleFlat = false;
 
     [Header("Suara")]
     public AudioSource audioSource;
@@ -32,14 +34,16 @@ public class BookFallEvent : MonoBehaviour
 
     [Header("Setelah mendarat: bisa diinteract (tekan E)")]
     public bool interactAfterLanding = true;
-    public TextMeshProUGUI promptText;           // kosong = pakai yang sudah ada di ZoomView buku
-    public MonoBehaviour playerController;       // kosong = dicari otomatis
+    public bool requireFacing = false;           // false = tidak perlu menatap buku tepat
+    public bool debugLog = true;                 // log diagnosis di Console
+    public TextMeshProUGUI promptText;
+    public MonoBehaviour playerController;
     public Renderer[] playerRenderers;
     public GameObject[] hideDuringZoom;
     public GameObject popupImage;
-    public float interactRadius = 1.2f;
-    public float zoomDistance = 0.8f;            // jarak ZoomPoint (kamera) dari buku
-    public float zoomPitch = 55f;
+    public float interactRadius = 2f;
+    public float zoomDistance = 0.8f;
+    public float zoomPitch = 15f;
     public float zoomFieldOfView = 0f;
     public UnityEvent onInspectEnter;
     public UnityEvent onInspectExit;
@@ -50,6 +54,7 @@ public class BookFallEvent : MonoBehaviour
     private bool interactReady = false;
     private float sinceFall = 0f;
     private float stillTimer = 0f;
+    private float nextDebug = 0f;
 
     private Rigidbody rb;
     private RadioTuner radio;
@@ -142,6 +147,8 @@ public class BookFallEvent : MonoBehaviour
             rb.isKinematic = false;
             rb.useGravity = true;
             rb.mass = mass;
+            rb.linearDamping = linearDamping;
+            rb.angularDamping = angularDamping;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
 
@@ -175,9 +182,17 @@ public class BookFallEvent : MonoBehaviour
         if (interactAfterLanding && fallStarted && !interactReady)
             CheckLanded();
 
-        // Selama tidak sedang zoom, ZoomPoint mengikuti posisi pemain
         if (interactReady && zoomView != null && !zoomView.IsZoomed)
             UpdateZoomPoint();
+
+        if (debugLog && interactReady && Time.time > nextDebug)
+        {
+            nextDebug = Time.time + 2f;
+            Transform p = playerController != null ? playerController.transform : null;
+            string dist = p != null ? Vector3.Distance(p.position, BookCenter()).ToString("F2") : "player tidak ditemukan";
+            Debug.Log("[BookFallEvent] siap | jarak pemain ke buku: " + dist + " | radius interaksi: " + interactRadius +
+                      " | ZoomView aktif: " + (zoomView != null && zoomView.enabled));
+        }
     }
 
     void RescueIfBelowFloor()
@@ -215,7 +230,7 @@ public class BookFallEvent : MonoBehaviour
         bool still = rb.linearVelocity.sqrMagnitude < 0.0025f && rb.angularVelocity.sqrMagnitude < 0.01f;
         stillTimer = still ? stillTimer + Time.deltaTime : 0f;
 
-        if ((sinceFall > 0.5f && stillTimer > 0.6f) || sinceFall > 6f || rescued)
+        if ((sinceFall > 0.5f && stillTimer > 0.6f) || sinceFall > 4f || rescued)
         {
             interactReady = true;
             StartCoroutine(SetupInteraction());
@@ -234,7 +249,6 @@ public class BookFallEvent : MonoBehaviour
             rb.interpolation = RigidbodyInterpolation.None;
         }
 
-        // Tunggu buku berbaring di lantai dulu, baru area interaksi dibuat
         if (settleFlat && floorPosition != null)
             yield return SettleTo(floorPosition.position, floorPosition.rotation);
 
@@ -249,13 +263,19 @@ public class BookFallEvent : MonoBehaviour
         GameObject zp = new GameObject("BookZoomPoint");
         zoomPointTf = zp.transform;
 
-        // Pakai ZoomView yang sudah dipasang di buku (supaya pengaturan Pick Up-nya terpakai)
         zoomView = bookToFall.GetComponent<ZoomView>();
-        if (zoomView == null) zoomView = bookToFall.gameObject.AddComponent<ZoomView>();
+        if (zoomView == null)
+        {
+            Debug.LogWarning("[BookFallEvent] ZoomView tidak ada di " + bookToFall.name +
+                             ". Dibuat otomatis, tapi sebaiknya pasang ZoomView di objek yang SAMA dengan Book To Fall.");
+            zoomView = bookToFall.gameObject.AddComponent<ZoomView>();
+        }
 
+        zoomView.enabled = true;
         zoomView.displayMode = ZoomView.DisplayMode.PickUp;
         zoomView.zoomPoint = zoomPointTf;
         zoomView.heightOffset = 0.5f;
+        zoomView.requireFacing = requireFacing;
         zoomView.controlColliders = new Collider[0];
         zoomView.allowExit = true;
         zoomView.resetOnExit = false;
@@ -264,6 +284,9 @@ public class BookFallEvent : MonoBehaviour
         if (playerRenderers != null && playerRenderers.Length > 0) zoomView.playerRenderers = playerRenderers;
         if (hideDuringZoom != null && hideDuringZoom.Length > 0) zoomView.hideDuringZoom = hideDuringZoom;
         if (zoomFieldOfView > 0f) zoomView.zoomFieldOfView = zoomFieldOfView;
+
+        // Cari pemain kalau belum diisi (untuk log diagnosis dan ZoomPoint)
+        if (playerController == null) playerController = FindFirstObjectByType<FirstPersonController>();
 
         if (zoomView.onEnter == null) zoomView.onEnter = new UnityEvent();
         if (zoomView.onExit == null) zoomView.onExit = new UnityEvent();
@@ -364,7 +387,6 @@ public class BookFallEvent : MonoBehaviour
         return y;
     }
 
-    // Hanya membersihkan daftar collider, isi Bookshelf dan BookItem tidak diubah
     void UnregisterFromBookshelf(Collider col)
     {
         foreach (Bookshelf shelf in FindObjectsByType<Bookshelf>(FindObjectsSortMode.None))

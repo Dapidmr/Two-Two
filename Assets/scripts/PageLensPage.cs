@@ -6,21 +6,56 @@ public class PageLensPage : MonoBehaviour
     public Texture gibberish;
     public Texture readable;
     public float aspect = 0.71f;
-    public int monocleId = 1;   // monocle mana yang boleh membaca halaman ini (1 atau 2)
+    public int monocleId = 1;
+
+    [Header("Penyesuaian texture")]
+    public bool autoFitUV = true;
+    public Vector2 texTiling = Vector2.one;
+    public Vector2 texOffset = Vector2.zero;
 
     private Material mat;
     private MeshCollider col;
+    private SkinnedMeshRenderer skin;
+    private Mesh baked;
+    private int bakedFrame = -1;
+    private Vector2 uvSize = Vector2.one;
 
-    // Pemetaan posisi lokal -> UV, diambil dari UV asli mesh
     private bool mapReady = false;
     private Vector3 P0, e1, e2, planeN;
     private Vector2 T0, dT1, dT2;
+    private float worldHeight = 1f;
 
     void Awake() { Init(); }
+
+    Mesh GetMesh()
+    {
+        var mf = GetComponent<MeshFilter>();
+        if (mf != null && mf.sharedMesh != null) return mf.sharedMesh;
+        return skin != null ? skin.sharedMesh : null;
+    }
+
+    void FitUV()
+    {
+        Mesh m = GetMesh();
+        if (m == null) return;
+        Vector2[] uvs = m.uv;
+        if (uvs == null || uvs.Length == 0) return;
+
+        Vector2 min = uvs[0], max = uvs[0];
+        foreach (Vector2 u in uvs) { min = Vector2.Min(min, u); max = Vector2.Max(max, u); }
+        Vector2 size = max - min;
+        if (size.x < 1e-5f || size.y < 1e-5f) return;
+        uvSize = size;
+
+        texTiling = new Vector2(1f / size.x, 1f / size.y);
+        texOffset = new Vector2(-min.x / size.x, -min.y / size.y);
+    }
 
     void Init()
     {
         if (mat != null) return;
+
+        skin = GetComponent<SkinnedMeshRenderer>();
 
         mat = new Material(lensMaterial);
         foreach (var n in new[] { "_GibberishTex", "_ReadableTex", "_Aspect", "_LensUV", "_LensRadius", "_LensOn" })
@@ -33,24 +68,52 @@ public class PageLensPage : MonoBehaviour
         mat.SetTexture("_ReadableTex", readable);
         mat.SetFloat("_Aspect", aspect);
         mat.SetFloat("_LensOn", 0f);
-        GetComponent<Renderer>().material = mat;
 
-        BuildMap();
+        if (autoFitUV) FitUV();
+        else
+        {
+            Mesh m = GetMesh();
+            if (m != null)
+            {
+                Vector2[] uvs = m.uv;
+                if (uvs != null && uvs.Length > 0)
+                {
+                    Vector2 mn = uvs[0], mx = uvs[0];
+                    foreach (Vector2 u in uvs) { mn = Vector2.Min(mn, u); mx = Vector2.Max(mx, u); }
+                    uvSize = mx - mn;
+                }
+            }
+        }
+        mat.SetVector("_TexST", new Vector4(texTiling.x, texTiling.y, texOffset.x, texOffset.y));
+
+        GetComponent<Renderer>().material = mat;
     }
 
-    void BuildMap()
+    // Ambil bentuk mesh yang sedang tampil (sekali per frame)
+    void RefreshMap()
     {
+        if (bakedFrame == Time.frameCount) return;
+        bakedFrame = Time.frameCount;
         mapReady = false;
-        var mf = GetComponent<MeshFilter>();
-        if (mf == null || mf.sharedMesh == null) return;
 
-        Mesh m = mf.sharedMesh;
+        Mesh m;
+        if (skin != null)
+        {
+            if (baked == null) baked = new Mesh();
+            skin.BakeMesh(baked, false);
+            m = baked;
+        }
+        else m = GetMesh();
+        if (m == null) return;
+
         Vector3[] v = m.vertices;
-        Vector2[] uvs = m.uv;
+        Vector2[] uvs = GetMesh().uv;
         int[] tr = m.triangles;
-        if (uvs.Length != v.Length) { Debug.LogError($"[{name}] mesh tidak punya UV"); return; }
+        if (uvs.Length != v.Length) return;
 
-        // Cari segitiga pertama yang tidak degenerate
+        Vector3 s = Vector3.Scale(m.bounds.size, transform.lossyScale);
+        worldHeight = Mathf.Max(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z));
+
         for (int i = 0; i + 2 < tr.Length; i += 3)
         {
             Vector3 a = v[tr[i]], b = v[tr[i + 1]], c = v[tr[i + 2]];
@@ -66,7 +129,6 @@ public class PageLensPage : MonoBehaviour
             mapReady = true;
             return;
         }
-        Debug.LogError($"[{name}] tidak menemukan segitiga valid untuk pemetaan UV");
     }
 
     public void SetCollider(bool on)
@@ -84,24 +146,24 @@ public class PageLensPage : MonoBehaviour
         mat.SetFloat("_LensOn", on ? 1f : 0f);
     }
 
+    // Tinggi halaman di dunia dibagi rentang UV = ukuran 1 satuan UV di dunia
     public float WorldHeight()
     {
-        var mf = GetComponent<MeshFilter>();
-        if (mf == null || mf.sharedMesh == null) return 1f;
-        Vector3 s = Vector3.Scale(mf.sharedMesh.bounds.size, transform.lossyScale);
-        return Mathf.Max(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z));
+        Init();
+        RefreshMap();
+        return worldHeight / Mathf.Max(uvSize.x, uvSize.y, 0.01f);
     }
 
-    // Perpotongan ray dengan bidang halaman -> UV (boleh di luar 0..1)
     public bool RayToUV(Ray ray, out Vector2 uv, out float dist)
     {
         uv = Vector2.zero;
         dist = 0f;
         Init();
+        RefreshMap();
         if (!mapReady) return false;
 
         Vector3 o = transform.InverseTransformPoint(ray.origin);
-        Vector3 d = transform.InverseTransformVector(ray.direction);   // memperhitungkan scale
+        Vector3 d = transform.InverseTransformVector(ray.direction);
 
         float denom = Vector3.Dot(d, planeN);
         if (Mathf.Abs(denom) < 1e-8f) return false;
@@ -119,7 +181,7 @@ public class PageLensPage : MonoBehaviour
         float q = (a * dw2 - b * dw1) / den;
         uv = T0 + s * dT1 + q * dT2;
 
-        dist = t * ray.direction.magnitude;   // jarak dunia
+        dist = t * ray.direction.magnitude;
         return true;
     }
 }
