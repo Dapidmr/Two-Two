@@ -8,8 +8,8 @@ public class MonocleLens : MonoBehaviour
     [System.Serializable]
     public class LensSlot
     {
-        public int monocleId = 1;                       // monocle mana (1 atau 2)
-        public RectTransform lensUI;                    // lingkaran di Canvas untuk monocle ini
+        public int monocleId = 1;
+        public RectTransform lensUI;
         public Vector2 startPos = new Vector2(0.9f, 0.18f);
         [HideInInspector] public bool wasActive;
     }
@@ -25,7 +25,7 @@ public class MonocleLens : MonoBehaviour
     public float radiusUV = 0.15f;
     public float grabRadius = 90f;
     [Range(0.3f, 1.5f)] public float lensFill = 0.8f;
-    public Transform zoomSource;
+    public Transform zoomSource;          // kosong = ZoomView di objek ini
 
     [Header("Penanda")]
     public bool tintLens = true;
@@ -81,7 +81,7 @@ public class MonocleLens : MonoBehaviour
 
     bool SlotActive(LensSlot s)
     {
-        return s != null && s.lensUI != null && zoomView != null && zoomView.IsZoomed && HasMonocle(s.monocleId);
+        return s != null && s.lensUI != null && zoomView != null && zoomView.ContentOpen && HasMonocle(s.monocleId);
     }
 
     void LateUpdate()
@@ -92,7 +92,6 @@ public class MonocleLens : MonoBehaviour
             else zoomView = GetComponent<ZoomView>();
         }
 
-        // Munculkan / sembunyikan tiap lensa
         for (int i = 0; i < lenses.Length; i++)
         {
             LensSlot s = lenses[i];
@@ -117,7 +116,6 @@ public class MonocleLens : MonoBehaviour
         if (mouse == null) return;
         Vector2 m = mouse.position.ReadValue();
 
-        // Klik: ambil lensa terdekat yang kena
         if (mouse.leftButton.wasPressedThisFrame)
         {
             float best = grabRadius;
@@ -133,7 +131,6 @@ public class MonocleLens : MonoBehaviour
         if (mouse.leftButton.wasReleasedThisFrame) dragIndex = -1;
         if (dragIndex >= 0 && lenses[dragIndex] != null) lenses[dragIndex].lensUI.position = m;
 
-        // Efek tiap lensa
         Camera cam = Camera.main;
         foreach (LensSlot s in lenses)
         {
@@ -141,8 +138,6 @@ public class MonocleLens : MonoBehaviour
 
             Ray ray = cam.ScreenPointToRay(s.lensUI.position);
 
-            // Halaman paling depan (semua halaman dihitung, jadi halaman milik
-            // monocle lain yang di depan tetap menghalangi)
             PageLensPage front = null;
             Vector2 uv = Vector2.zero;
             float hitDist = 0f, bestDist = float.MaxValue;

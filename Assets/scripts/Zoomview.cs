@@ -4,16 +4,20 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using TMPro;
 
-// Sistem umum: tekan E dekat objek -> kamera zoom ke ZoomPoint -> benda bisa diputar 360 derajat
-// dengan digeser (seperti bom di Keep Talking and Nobody Explodes).
-// Dipakai untuk radio, buku, rak, Pandora, dan objek lain. Tidak bergantung pada script Bookshelf.
-// Taruh script ini di objek yang punya Box Collider (Is Trigger) sebagai area deteksi.
-// Mendukung kamera tetap maupun first person.
+// Sistem umum: tekan E dekat objek -> kamera zoom ke ZoomPoint.
+// Mode Camera To Point: benda bisa diputar 360 derajat dengan digeser (radio, rak, Pandora).
+// Mode Pick Up: benda maju ke depan kamera, latar menggelap, bisa diputar dan (opsional)
+//               dibuka dengan clip animasi (buku, benda yang bisa diangkat). Gaya BookItem.
+// Taruh script ini di objek yang punya Collider (Is Trigger) sebagai area deteksi.
 //
-// BARU: FocusOn() / Unfocus() untuk zoom level 2 (dipakai PandoraController).
-// Kalau tidak dipanggil, perilaku sama persis seperti sebelumnya.
+// FocusOn() / Unfocus() untuk zoom level 2 (dipakai PandoraController), hanya di mode Camera To Point.
 public class ZoomView : MonoBehaviour
 {
+    public enum DisplayMode { CameraToPoint, PickUp }
+
+    [Header("Mode tampilan")]
+    public DisplayMode displayMode = DisplayMode.CameraToPoint;
+
     [Header("UI")]
     public TextMeshProUGUI promptText;
     public float heightOffset = 1.5f;
@@ -35,6 +39,7 @@ public class ZoomView : MonoBehaviour
 
     [Header("Memutar benda (digeser)")]
     public bool allowRotate = true;
+    public bool debugDrag = false;   // centang sementara: Console menampilkan apa yang ada di bawah kursor saat klik
     public Transform rotateTarget;
     public Transform pivot;
     public float dragSensitivity = 0.4f;
@@ -67,11 +72,54 @@ public class ZoomView : MonoBehaviour
     public UnityEvent onEnter;
     public UnityEvent onExit;
 
-    public bool IsZoomed { get { return isZoomed; } }
+    // ===== Pick Up: tampilan =====
+    [Header("Pick Up: tampilan")]
+    public float inspectDistance = 0.5f;     // jarak benda dari kamera
+    public float inspectRadius = 0.2f;       // ukuran benda saat diangkat (radius, world unit)
+    public float inspectMoveSpeed = 8f;
+    public float rotateSpeed = 0.4f;         // derajat per pixel drag
+    public bool faceCameraOnInspect = true;
+    public Vector3 faceLocalAxis = Vector3.up;     // sumbu lokal benda yang menghadap kamera
+    public Vector3 faceLocalUp = Vector3.right;    // sumbu lokal benda yang naik di layar
 
-    // BARU: true kalau kamera sedang fokus ke bagian tertentu (zoom level 2)
+    [Header("Pick Up: latar gelap")]
+    public float dimMax = 0.75f;
+    public float dimFadeSpeed = 4f;
+    public float dimGap = 0.05f;
+
+    [Header("Pick Up: teks petunjuk (boleh pakai teks yang sama dengan rak)")]
+    public TextMeshProUGUI inspectHintText;  // "Press Esc to back"
+    public TextMeshProUGUI readHintText;     // "E to read"
+    public string hintDefault = "Press Esc to back";
+    public string hintOpened = "Press Esc to close book";
+
+    [Header("Pick Up: buka dengan animasi (kosongkan kalau benda tidak bisa dibuka)")]
+    public AnimationClip[] openClips;        // clip "Plane|..."
+    public float openDuration = 1.2f;
+    public float openUp = 0.08f;
+    public float openScaleMul = 1.3f;
+    public float openRoll = 0f;
+    public float openBlendSpeed = 3f;
+    public float closeSpeedMul = 1.5f;
+    public float closeSkip = 0.07f;
+
+    public bool IsZoomed { get { return isZoomed; } }
+    public bool IsPickUp { get { return displayMode == DisplayMode.PickUp; } }
+
+    // true kalau isi benda terlihat: mode biasa = selama zoom. Pick Up dengan clip = hanya saat terbuka.
+    public bool ContentOpen
+    {
+        get
+        {
+            if (!isZoomed) return false;
+            if (!IsPickUp) return true;
+            bool hasClips = openClips != null && openClips.Length > 0;
+            return !hasClips || bookState != 0;
+        }
+    }
+
+    // true kalau kamera sedang fokus ke bagian tertentu (zoom level 2)
     public bool IsFocused { get { return focused; } }
-    // BARU: dipanggil saat fokus selesai (Esc/E atau keluar dari zoom)
     public event System.Action Unfocused;
 
     private static readonly List<ZoomView> instances = new List<ZoomView>();
@@ -92,7 +140,6 @@ public class ZoomView : MonoBehaviour
     private Quaternion camOriginalRot;
     private Renderer focusRenderer;
 
-    // Kamera dilepas dari Capsule saat zoom, Rigidbody dibekukan
     private Transform camParent;
     private bool camDetached = false;
     private Rigidbody playerRb;
@@ -105,10 +152,9 @@ public class ZoomView : MonoBehaviour
     private Quaternion origRot;
     private Vector3 pivotPos;
 
-    // BARU: status fokus section
     private bool focused = false;
     private float focusFov = 0f;
-    private bool fovTouched = false;    // true kalau ZoomView ini yang mengubah FOV kamera
+    private bool fovTouched = false;
 
     private bool dragging = false;
     private int dragAxis = 0;
@@ -119,6 +165,22 @@ public class ZoomView : MonoBehaviour
     private Vector2 velocity = Vector2.zero;
     private float yaw = 0f;
     private float pitch = 0f;
+
+    // ----- Pick Up -----
+    private bool pickReturning = false;
+    private Vector3 origScale;
+    private Vector3 localCenter, viewCenter, targetScale;
+    private float bookRadius = 0f;
+    private Renderer[] allRends;
+    private float phase = 0f;               // 0 = tertutup, 0.5 = terbuka penuh
+    private int bookState = 0;              // 0 tertutup, 1 membuka, 2 terbuka, 3 menutup
+    private float openT = 0f;
+    private Quaternion openRot, inspectTargetRot;
+    private bool settlingRot = false;
+    private bool readShown = false;
+    private Transform dimQuad;
+    private Material dimMat;
+    private float dimAlpha = 0f, dimTarget = 0f;
 
     void OnEnable()
     {
@@ -139,6 +201,11 @@ public class ZoomView : MonoBehaviour
         }
     }
 
+    void OnDestroy()
+    {
+        if (dimQuad != null) Destroy(dimQuad.gameObject);
+    }
+
     void Start()
     {
         camComp = Camera.main;
@@ -155,6 +222,8 @@ public class ZoomView : MonoBehaviour
 
         SetControlsInteractable(false);
         if (promptText != null) promptText.gameObject.SetActive(false);
+        if (inspectHintText != null && displayMode == DisplayMode.PickUp) inspectHintText.gameObject.SetActive(false);
+        if (readHintText != null && displayMode == DisplayMode.PickUp) readHintText.gameObject.SetActive(false);
     }
 
     void OnTriggerEnter(Collider other)
@@ -185,7 +254,7 @@ public class ZoomView : MonoBehaviour
     static ZoomView ComputeBest()
     {
         foreach (ZoomView z in instances)
-            if (z.isZoomed || z.returning || z.resetting) return null;
+            if (z.isZoomed || z.returning || z.resetting || z.pickReturning) return null;
 
         ZoomView best = null;
         float bestAngle = float.MaxValue;
@@ -246,15 +315,22 @@ public class ZoomView : MonoBehaviour
 
         if (canInteract && ePressed)
             EnterZoom();
+        else if (isZoomed && IsPickUp)
+        {
+            if (UpdatePickUp() && allowExit) ExitZoom();
+        }
         else if (isZoomed && focused && (ePressed || escPressed))
-            Unfocus();                                  // BARU: Esc/E dulu kembali ke tampilan box
+            Unfocus();
         else if (isZoomed && allowExit && (ePressed || escPressed))
             ExitZoom();
 
         if (isZoomed)
         {
-            // BARU: saat fokus, benda tidak bisa diputar (hanya dikembalikan ke posisi awal)
-            if (focused)
+            if (IsPickUp)
+            {
+                // sudah ditangani UpdatePickUp
+            }
+            else if (focused)
             {
                 if (resetting) UpdateReset();
             }
@@ -280,11 +356,9 @@ public class ZoomView : MonoBehaviour
                 cam.position = Vector3.Lerp(cam.position, camOriginalPos, Time.deltaTime * cameraSpeed);
                 cam.rotation = Quaternion.Slerp(cam.rotation, camOriginalRot, Time.deltaTime * cameraSpeed);
 
-                // FOV hanya dikembalikan kalau ZoomView ini yang mengubahnya
                 if (fovTouched && !camComp.orthographic)
                     camComp.fieldOfView = Mathf.Lerp(camComp.fieldOfView, origFov, Time.deltaTime * cameraSpeed);
 
-                // Posisi DAN rotasi harus sudah dekat, supaya tidak "snap" di akhir
                 if (Vector3.Distance(cam.position, camOriginalPos) < 0.01f &&
                     Quaternion.Angle(cam.rotation, camOriginalRot) < 0.5f)
                 {
@@ -298,10 +372,29 @@ public class ZoomView : MonoBehaviour
             }
 
             if (resetting) UpdateReset();
+            if (pickReturning) UpdatePickReturn();
         }
     }
 
-    // Bekukan Rigidbody pemain dan lepas kamera dari Capsule
+    void LateUpdate()
+    {
+        if (dimQuad == null) return;
+
+        dimAlpha = Mathf.MoveTowards(dimAlpha, dimTarget, Time.deltaTime * dimFadeSpeed);
+        dimMat.color = new Color(0f, 0f, 0f, dimAlpha);
+
+        bool show = dimAlpha > 0.001f;
+        dimQuad.gameObject.SetActive(show);
+        if (show && camComp != null)
+        {
+            float dist = inspectDistance + inspectRadius + dimGap;
+            dimQuad.localPosition = new Vector3(0f, 0f, dist);
+            float h = 2f * dist * Mathf.Tan(camComp.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            float w = h * camComp.aspect;
+            dimQuad.localScale = new Vector3(w * 1.2f, h * 1.2f, 1f);
+        }
+    }
+
     void FreezePlayerAndDetachCamera()
     {
         if (playerRb == null && playerController != null)
@@ -344,10 +437,8 @@ public class ZoomView : MonoBehaviour
         SetPlayerVisible(true);
     }
 
-    // ==================== BARU: zoom level 2 ====================
+    // ==================== Zoom level 2 (Camera To Point) ====================
 
-    // Pindahkan kamera ke titik lain (misal ke satu section benda). Box dikembalikan ke posisi awal.
-    // Titik kamera harus ditentukan saat benda belum diputar, dan bukan anak dari benda yang diputar.
     public void FocusOn(Transform point, float fov)
     {
         if (!isZoomed || point == null) return;
@@ -363,7 +454,6 @@ public class ZoomView : MonoBehaviour
         viewRot = point.rotation;
     }
 
-    // Kembali ke tampilan zoom biasa (bisa diputar lagi)
     public void Unfocus()
     {
         if (!focused) return;
@@ -375,6 +465,230 @@ public class ZoomView : MonoBehaviour
         viewRot = zoomPoint.rotation;
 
         if (Unfocused != null) Unfocused();
+    }
+
+    // ==================== Pick Up ====================
+
+    void BeginPickUp()
+    {
+        origScale = rotateTarget.localScale;
+        pickReturning = false;
+
+        allRends = rotateTarget.GetComponentsInChildren<Renderer>();
+        bookRadius = 0f;
+        if (allRends.Length > 0)
+        {
+            Bounds b = allRends[0].bounds;
+            for (int i = 1; i < allRends.Length; i++) b.Encapsulate(allRends[i].bounds);
+            localCenter = rotateTarget.InverseTransformPoint(b.center);
+            bookRadius = b.extents.magnitude;
+        }
+        viewCenter = localCenter;
+        float k = bookRadius > 0.0001f ? inspectRadius / bookRadius : 1f;
+        targetScale = origScale * k;
+
+        phase = 0f; bookState = 0; openT = 0f;
+        ApplyOpenPose();
+        readShown = false;
+        settlingRot = faceCameraOnInspect;
+
+        SetOpenedHint(false);
+        if (inspectHintText != null) inspectHintText.gameObject.SetActive(true);
+
+        if (dimQuad == null)
+        {
+            var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            q.name = "ZoomViewDim";
+            Destroy(q.GetComponent<Collider>());
+            q.transform.SetParent(cam, false);
+            q.transform.localRotation = Quaternion.identity;
+
+            var r = q.GetComponent<MeshRenderer>();
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            dimMat = new Material(Shader.Find("Sprites/Default"));
+            dimMat.color = new Color(0f, 0f, 0f, 0f);
+            r.material = dimMat;
+
+            dimQuad = q.transform;
+            q.SetActive(false);
+        }
+        dimTarget = dimMax;
+    }
+
+    void EndPickUp()
+    {
+        dimTarget = 0f;
+        readShown = false;
+        if (readHintText != null) readHintText.gameObject.SetActive(false);
+        if (inspectHintText != null) inspectHintText.gameObject.SetActive(false);
+    }
+
+    Quaternion FaceRot(Transform c)
+    {
+        Quaternion local = Quaternion.LookRotation(faceLocalAxis.normalized, faceLocalUp.normalized);
+        Quaternion view = Quaternion.LookRotation(-c.forward, c.up);
+        return view * Quaternion.Inverse(local);
+    }
+
+    void ApplyOpenPose()
+    {
+        if (openClips == null) return;
+        foreach (var c in openClips)
+            if (c != null) c.SampleAnimation(rotateTarget.gameObject, phase * c.length);
+    }
+
+    Vector3 CurrentLocalCenter()
+    {
+        if (allRends == null) return localCenter;
+        Matrix4x4 w2l = rotateTarget.worldToLocalMatrix;
+        bool first = true;
+        Bounds lb = new Bounds();
+        foreach (var r in allRends)
+        {
+            if (r == null) continue;
+            Bounds b = r.localBounds;
+            Matrix4x4 m = w2l * r.transform.localToWorldMatrix;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 c = b.center + Vector3.Scale(b.extents, new Vector3(
+                    (i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+                Vector3 p = m.MultiplyPoint3x4(c);
+                if (first) { lb = new Bounds(p, Vector3.zero); first = false; }
+                else lb.Encapsulate(p);
+            }
+        }
+        return first ? localCenter : lb.center;
+    }
+
+    void SetReadHint(bool show)
+    {
+        if (show == readShown) return;
+        readShown = show;
+        if (readHintText != null) readHintText.gameObject.SetActive(show);
+    }
+
+    void SetOpenedHint(bool opened)
+    {
+        if (inspectHintText != null) inspectHintText.text = opened ? hintOpened : hintDefault;
+    }
+
+    // Mengembalikan true kalau pemain ingin keluar
+    bool UpdatePickUp()
+    {
+        Transform t = rotateTarget;
+        Transform c = cam;
+        float dt = Time.deltaTime;
+        bool e = Keyboard.current.eKey.wasPressedThisFrame;
+        bool esc = Keyboard.current.escapeKey.wasPressedThisFrame;
+        bool hasClips = openClips != null && openClips.Length > 0;
+        bool wantExit;
+
+        if (hasClips)
+        {
+            if (esc)
+            {
+                if (bookState == 2)
+                {
+                    bookState = 3;
+                    phase = Mathf.Min(1f, phase + closeSkip);
+                }
+                if (bookState != 0) esc = false;      // selama buku terbuka/animasi, jangan keluar
+            }
+            else if (e && bookState == 0)
+            {
+                bookState = 1;
+                openRot = Quaternion.AngleAxis(openRoll, -c.forward) * FaceRot(c);
+            }
+            wantExit = esc;
+
+            float step = dt / Mathf.Max(0.01f, openDuration) * 0.5f;
+            float prevPhase = phase;
+
+            if (bookState == 1)
+            {
+                phase = Mathf.MoveTowards(phase, 0.5f, step);
+                if (phase >= 0.5f) bookState = 2;
+            }
+            else if (bookState == 3)
+            {
+                phase = Mathf.MoveTowards(phase, 1f, step * closeSpeedMul);
+                if (phase >= 1f)
+                {
+                    phase = 1f;
+                    ApplyOpenPose();
+                    Vector3 pv = t.TransformPoint(CurrentLocalCenter());
+                    t.RotateAround(pv, c.up, 180f);
+
+                    phase = 0f;
+                    bookState = 0;
+                    settlingRot = false;
+                    ApplyOpenPose();
+
+                    Vector3 newCenterLocal = CurrentLocalCenter();
+                    t.position += pv - t.TransformPoint(newCenterLocal);
+                    viewCenter = newCenterLocal;
+                    prevPhase = phase;
+                }
+            }
+            if (phase != prevPhase) ApplyOpenPose();
+
+            openT = Mathf.MoveTowards(openT, bookState == 0 ? 0f : 1f, dt * openBlendSpeed);
+            SetReadHint(bookState == 0);
+            SetOpenedHint(bookState != 0);
+        }
+        else
+        {
+            wantExit = e || esc;
+        }
+
+        // Rotasi
+        if (bookState != 0)
+        {
+            t.rotation = Quaternion.Slerp(t.rotation, openRot, dt * inspectMoveSpeed);
+        }
+        else if (allowRotate && Mouse.current.leftButton.isPressed)
+        {
+            settlingRot = false;
+            Vector2 d = Mouse.current.delta.ReadValue();
+            t.Rotate(c.up, -d.x * rotateSpeed, Space.World);
+            t.Rotate(c.right, d.y * rotateSpeed, Space.World);
+        }
+        else if (settlingRot)
+        {
+            inspectTargetRot = FaceRot(c);   // ikut arah kamera yang sedang bergerak
+            t.rotation = Quaternion.Slerp(t.rotation, inspectTargetRot, dt * inspectMoveSpeed);
+        }
+
+        // Skala dan posisi
+        float o = Mathf.SmoothStep(0f, 1f, openT);
+        Vector3 scaleT = targetScale * Mathf.Lerp(1f, openScaleMul, o);
+        t.localScale = Vector3.Lerp(t.localScale, scaleT, dt * inspectMoveSpeed);
+
+        Vector3 center = c.position + c.forward * inspectDistance + c.up * (openUp * o);
+        Vector3 wantCenter = bookState != 0 ? CurrentLocalCenter() : localCenter;
+        viewCenter = bookState != 0 ? wantCenter : Vector3.Lerp(viewCenter, wantCenter, dt * inspectMoveSpeed);
+        Vector3 target = center - t.TransformVector(viewCenter);
+        t.position = Vector3.Lerp(t.position, target, dt * inspectMoveSpeed);
+
+        return wantExit;
+    }
+
+    void UpdatePickReturn()
+    {
+        Transform t = rotateTarget;
+        float k = Time.deltaTime * inspectMoveSpeed;
+        t.localScale = Vector3.Lerp(t.localScale, origScale, k);
+        t.position = Vector3.Lerp(t.position, origPos, k);
+        t.rotation = Quaternion.Slerp(t.rotation, origRot, k);
+
+        if (Vector3.Distance(t.position, origPos) < 0.002f && Quaternion.Angle(t.rotation, origRot) < 0.5f)
+        {
+            t.position = origPos;
+            t.rotation = origRot;
+            t.localScale = origScale;
+            pickReturning = false;
+        }
     }
 
     // ============================================================
@@ -491,11 +805,42 @@ public class ZoomView : MonoBehaviour
         if (controlColliders == null) return false;
 
         Ray ray = camComp.ScreenPointToRay(Mouse.current.position.ReadValue());
+
+        // 1. Kalau kursor tepat di atas SlidingCover, selalu boleh memutar radio.
+        //    Dicek langsung ke collider cover (bukan lewat jarak dengan collider lain),
+        //    jadi keycap, badan radio, atau IsControlVisible tidak bisa mengganggu.
+        foreach (Collider c in controlColliders)
+        {
+            if (c == null || !c.enabled) continue;
+            if (c.GetComponent<SlidingCover>() == null) continue;
+
+            RaycastHit ch;
+            if (c.Raycast(ray, out ch, 100f))
+            {
+                if (debugDrag) Debug.Log("[ZoomView] Kursor di atas cover '" + c.name + "' -> drag boleh memutar radio");
+                return false;
+            }
+        }
+
+        // 2. Selain cover: kontrol terdekat yang terlihat (knob, tombol power, keycap)
         RaycastHit[] hits = Physics.RaycastAll(ray, 100f, ~0, QueryTriggerInteraction.Ignore);
+        string found = "-";
+        float best = float.MaxValue;
         foreach (var h in hits)
-            if (System.Array.IndexOf(controlColliders, h.collider) >= 0 && IsControlVisible(h.collider))
-                return true;
-        return false;
+        {
+            if (System.Array.IndexOf(controlColliders, h.collider) < 0) continue;
+            if (!IsControlVisible(h.collider)) continue;
+            if (h.distance < best)
+            {
+                best = h.distance;
+                found = h.collider.name;
+            }
+        }
+
+        if (debugDrag)
+            Debug.Log("[ZoomView] Kontrol di bawah kursor: " + found + (best == float.MaxValue ? " (tidak ada -> radio berputar)" : " (radio TIDAK berputar)"));
+
+        return best != float.MaxValue;
     }
 
     bool IsControlObject(Transform t)
@@ -588,8 +933,8 @@ public class ZoomView : MonoBehaviour
         velocity = Vector2.zero;
         yaw = 0f;
         pitch = 0f;
-        focused = false;                // BARU
-        focusFov = 0f;                  // BARU
+        focused = false;
+        focusFov = 0f;
 
         origPos = rotateTarget.position;
         origRot = rotateTarget.rotation;
@@ -616,12 +961,13 @@ public class ZoomView : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
+        if (IsPickUp) BeginPickUp();
+
         onEnter.Invoke();
     }
 
     void ExitZoom()
     {
-        // BARU: pastikan status fokus bersih (pemakai Unfocused ikut diberi tahu)
         if (focused)
         {
             focused = false;
@@ -632,11 +978,21 @@ public class ZoomView : MonoBehaviour
         returning = true;
         isZoomed = false;
         dragging = false;
-        resetting = resetOnExit;
-        if (resetting)
+
+        if (IsPickUp)
         {
-            yaw = Mathf.DeltaAngle(0f, yaw);
-            pitch = Mathf.DeltaAngle(0f, pitch);
+            resetting = false;
+            pickReturning = true;
+            EndPickUp();
+        }
+        else
+        {
+            resetting = resetOnExit;
+            if (resetting)
+            {
+                yaw = Mathf.DeltaAngle(0f, yaw);
+                pitch = Mathf.DeltaAngle(0f, pitch);
+            }
         }
 
         SetControlsInteractable(false);

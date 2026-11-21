@@ -153,7 +153,9 @@ public class RadioKnob : MonoBehaviour
                 closestDist = h.distance;
             }
         }
-        return closest == this && (owner == null || owner.IsControlVisible(col));
+        return closest == this
+            && (owner == null || owner.IsControlVisible(col))
+            && ClickOcclusion.IsFrontmost(col, hits);   // <-- TAMBAHAN
     }
 
     void ApplyRotation()

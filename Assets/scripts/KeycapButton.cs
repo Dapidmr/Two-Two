@@ -99,6 +99,8 @@ public class KeycapButton : MonoBehaviour
             }
         }
 
-        return closest == this && (owner == null || owner.IsControlVisible(col));
+        return closest == this
+            && (owner == null || owner.IsControlVisible(col))
+            && ClickOcclusion.IsFrontmost(col, hits);   // <-- TAMBAHAN: harus paling depan dari SEMUA collider
     }
 }

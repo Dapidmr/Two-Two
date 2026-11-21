@@ -18,6 +18,10 @@ public class RadioKeypad : MonoBehaviour
     public RadioTuner tuner;                // kosongkan kalau ada di objek yang sama
     public ZoomView zoomView;               // kosongkan kalau ada di objek yang sama
 
+    [Header("Tutupan di depan keypad (opsional)")]
+    [Tooltip("Kalau diisi, keypad hanya bisa ditekan ketika cover ini terbuka.")]
+    public SlidingCover cover;
+
     [Header("Peta keycap (atur sendiri di sini)")]
     public KeyEntry[] keyMap;               // tiap baris = satu keycap dan angkanya
 
@@ -99,6 +103,28 @@ public class RadioKeypad : MonoBehaviour
             all.AddRange(newColliders);
             zoomView.controlColliders = all.ToArray();
         }
+
+        // Keypad hanya aktif kalau cover (kalau ada) sedang terbuka, dan belum terkunci
+        if (cover != null)
+        {
+            cover.onOpened.AddListener(HandleCoverOpened);
+            cover.onClosed.AddListener(HandleCoverClosed);
+            SetInteractable(cover.IsOpen && !locked);
+        }
+        else
+        {
+            SetInteractable(!locked);
+        }
+    }
+
+    void HandleCoverOpened()
+    {
+        if (!locked && !releasing) SetInteractable(true);
+    }
+
+    void HandleCoverClosed()
+    {
+        SetInteractable(false);
     }
 
     // Naikkan semua tombol sekarang juga (dipanggil RadioTuner saat * ditekan)
@@ -121,7 +147,7 @@ public class RadioKeypad : MonoBehaviour
         yield return new WaitForSeconds(delay);
         ReleaseAll();
         releasing = false;
-        if (!locked) SetInteractable(true);
+        if (!locked && (cover == null || cover.IsOpen)) SetInteractable(true);
     }
 
     // Kode benar: tombol tetap seperti sekarang dan tidak bisa ditekan lagi
@@ -131,7 +157,7 @@ public class RadioKeypad : MonoBehaviour
         SetInteractable(false);
     }
 
-    void SetInteractable(bool value)
+    public void SetInteractable(bool value)
     {
         foreach (KeycapButton b in buttons) b.interactable = value;
     }

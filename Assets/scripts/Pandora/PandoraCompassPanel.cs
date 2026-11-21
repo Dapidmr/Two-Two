@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 
-// Section kompas: jarum berputar DATAR di permukaan kompas.
-// Mode melingkar (default): tahan klik lalu gerakkan mouse mengelilingi pusat kompas,
-// jarum mengikuti sudut mouse. Mode lurus: geser kanan/kiri.
+// Section kompas.
+// - Selalu bisa dimainkan (tidak terkunci).
+// - Tahan klik lalu gerakkan mouse melingkar mengelilingi pusat kompas, jarum mengikuti mouse.
+// - Saat jarum digerakkan, tulisan derajat muncul di sebelah kompas (0-360, searah jarum jam dari posisi awal).
+// - Benar atau salah HANYA diberi tahu kalau section lain sudah selesai:
+//   jarum diam selama Confirm Delay (default 1 detik) -> merah = salah, hijau = benar.
 // Sumbu putar otomatis = arah pandang Focus Point (tegak lurus permukaan kompas).
-// Benar/salahnya HANYA dicek kalau section lain sudah selesai. Dicek saat tombol mouse dilepas.
 public class PandoraCompassPanel : PandoraPanel
 {
     [Header("Jarum")]
@@ -18,16 +21,26 @@ public class PandoraCompassPanel : PandoraPanel
     public Transform pivot;
 
     [Header("Kontrol")]
-    [Tooltip("true = jarum mengikuti mouse yang melingkar di sekitar pusat kompas.")]
-    public bool circularDrag = true;
     [Tooltip("Mouse terlalu dekat ke pusat (dalam piksel) diabaikan supaya jarum tidak bergetar.")]
     public float centerDeadZonePixels = 20f;
-    public float dragSensitivity = 0.5f;            // hanya untuk mode lurus
     public bool invert = false;                     // centang kalau arah putarnya terbalik
 
     [Header("Jawaban")]
-    public float targetAngle = 90f;                 // sudut benar (derajat dari posisi awal)
-    public float tolerance = 8f;
+    [Tooltip("Derajat yang benar (0-360, searah jarum jam dari posisi awal jarum).")]
+    public float targetDegrees = 90f;
+    [Tooltip("Selisih yang masih dianggap benar. 1 = harus spesifik.")]
+    public float tolerance = 1f;
+    [Tooltip("Jarum harus diam selama ini (detik) baru dicek benar atau salah.")]
+    public float confirmDelay = 1f;
+
+    [Header("Tulisan derajat")]
+    public TextMeshProUGUI degreeText;              // TMP di Canvas, misal "135°"
+    [Tooltip("Opsional: objek kosong di sebelah kompas. Tulisan derajat akan menempel di titik ini. Kosong = tulisan tetap di posisinya di Canvas.")]
+    public Transform textAnchor;
+    public Vector2 textOffsetPixels = Vector2.zero;
+    public Color normalColor = Color.white;
+    public Color correctColor = Color.green;
+    public Color wrongColor = Color.red;
 
     [Header("Indikator (opsional)")]
     public Renderer indicator;
@@ -37,7 +50,12 @@ public class PandoraCompassPanel : PandoraPanel
     private Vector3 startLocalPos;
     private Vector3 axisParent;                     // sumbu putar dalam ruang induk jarum
     private Vector3 pivotLocal;
-    private float angle = 0f;
+
+    private float turn = 0f;                        // total putaran jarum yang terlihat (berlawanan jarum jam = positif)
+    private float lastTurn = 0f;
+    private float lastChangeTime = 0f;
+    private bool hasMoved = false;
+    private bool evaluated = false;
     private bool focused = false;
     private bool dragging = false;
     private float lastMouseAngle = 0f;
@@ -51,6 +69,7 @@ public class PandoraCompassPanel : PandoraPanel
 
     void Awake()
     {
+        if (degreeText != null) degreeText.gameObject.SetActive(false);
         if (needle == null) return;
 
         startLocalRot = needle.localRotation;
@@ -68,12 +87,27 @@ public class PandoraCompassPanel : PandoraPanel
     {
         focused = true;
         dragging = false;
+        evaluated = false;
+        lastTurn = turn;
+        lastChangeTime = Time.time;
+
+        // Kalau jarum sudah pernah digerakkan, tulisan derajat langsung tampil
+        hasMoved = Mathf.Abs(turn) > 0.05f;
+        if (degreeText != null) degreeText.gameObject.SetActive(hasMoved || solved);
+        RefreshText(solved ? correctColor : normalColor);
     }
 
     public override void OnUnfocus()
     {
         focused = false;
         dragging = false;
+        if (degreeText != null) degreeText.gameObject.SetActive(false);
+    }
+
+    // Derajat yang tampil: 0-360, naik kalau jarum diputar searah jarum jam
+    float DisplayDegrees()
+    {
+        return Mathf.Repeat(-turn, 360f);
     }
 
     // Sudut mouse terhadap pusat kompas di layar (derajat, berlawanan jarum jam = positif).
@@ -99,52 +133,68 @@ public class PandoraCompassPanel : PandoraPanel
     {
         if (!focused || solved || needle == null || Mouse.current == null) return;
 
+        // --- Drag melingkar ---
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
-            dragging = true;
-            if (circularDrag)
-            {
-                float a;
-                if (TryGetMouseAngle(out a)) lastMouseAngle = a;
-                else dragging = false;          // klik terlalu dekat pusat: abaikan
-            }
+            float a;
+            dragging = TryGetMouseAngle(out a);
+            if (dragging) lastMouseAngle = a;
         }
 
         if (dragging)
         {
-            if (circularDrag)
+            float a;
+            if (TryGetMouseAngle(out a))
             {
-                float a;
-                if (TryGetMouseAngle(out a))
-                {
-                    // Sumbu mengarah ke kamera: sudut positif = berlawanan jarum jam di layar, sama dengan sudut mouse
-                    float delta = Mathf.DeltaAngle(lastMouseAngle, a);
-                    angle += (invert ? -1f : 1f) * delta;
-                    lastMouseAngle = a;
-                    ApplyAngle();
-                }
-            }
-            else
-            {
-                float dx = Mouse.current.delta.ReadValue().x;
-                angle += (invert ? 1f : -1f) * dx * dragSensitivity;
-                ApplyAngle();
+                turn += Mathf.DeltaAngle(lastMouseAngle, a);
+                lastMouseAngle = a;
+                ApplyTurn();
             }
         }
 
-        if (Mouse.current.leftButton.wasReleasedThisFrame && dragging)
+        if (Mouse.current.leftButton.wasReleasedThisFrame) dragging = false;
+
+        // --- Jarum bergerak: tulisan derajat muncul, status cek direset ---
+        if (Mathf.Abs(turn - lastTurn) > 0.05f)
         {
-            dragging = false;
+            lastTurn = turn;
+            lastChangeTime = Time.time;
+            hasMoved = true;
+            evaluated = false;
+            if (degreeText != null) degreeText.gameObject.SetActive(true);
+            RefreshText(normalColor);
+        }
+
+        // --- Jarum diam cukup lama: cek benar atau salah ---
+        if (hasMoved && !evaluated && Time.time - lastChangeTime >= confirmDelay)
+        {
+            evaluated = true;
             Evaluate();
         }
     }
 
-    void ApplyAngle()
+    void LateUpdate()
     {
-        Quaternion q = Quaternion.AngleAxis(angle, axisParent);
+        // Tulisan derajat menempel di sebelah kompas
+        if (!focused || textAnchor == null || degreeText == null || !degreeText.gameObject.activeSelf) return;
+
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        Vector3 sp = cam.WorldToScreenPoint(textAnchor.position);
+        if (sp.z > 0f)
+            degreeText.transform.position = new Vector3(sp.x + textOffsetPixels.x, sp.y + textOffsetPixels.y, 0f);
+    }
+
+    void ApplyTurn()
+    {
+        float needleAngle = invert ? -turn : turn;
+        Quaternion q = Quaternion.AngleAxis(needleAngle, axisParent);
         needle.localRotation = q * startLocalRot;
         if (pivot != null)
             needle.localPosition = pivotLocal + q * (startLocalPos - pivotLocal);
+
+        RefreshText(normalColor);
     }
 
     void Evaluate()
@@ -152,21 +202,36 @@ public class PandoraCompassPanel : PandoraPanel
         // Section lain belum selesai: pemain tidak boleh tahu benar atau salah
         if (owner != null && !owner.OthersSolved(this)) return;
 
-        if (Mathf.Abs(Mathf.DeltaAngle(angle, targetAngle)) <= tolerance)
+        float diff = Mathf.Abs(Mathf.DeltaAngle(DisplayDegrees(), targetDegrees));
+
+        if (diff <= tolerance)
         {
-            angle = targetAngle;
-            ApplyAngle();
+            turn = -targetDegrees;              // pas di sudut target
+            lastTurn = turn;
+            ApplyTurn();
+            RefreshText(correctColor);
             if (indicator != null) indicator.material.color = solvedColor;
             SetSolved();
         }
+        else
+        {
+            RefreshText(wrongColor);
+        }
+    }
+
+    void RefreshText(Color color)
+    {
+        if (degreeText == null) return;
+        degreeText.text = Mathf.RoundToInt(DisplayDegrees()) % 360 + "°";
+        degreeText.color = color;
     }
 
     // Playmode: putar jarum ke posisi yang diinginkan, lalu klik kanan judul komponen > ini
-    [ContextMenu("Pakai Sudut Sekarang Sebagai Target")]
+    [ContextMenu("Pakai Derajat Sekarang Sebagai Target")]
     void UseCurrentAsTarget()
     {
-        targetAngle = angle;
-        Debug.Log("[Pandora] Target angle = " + angle + "  (salin nilai ini ke Target Angle setelah Stop)");
+        targetDegrees = Mathf.Round(DisplayDegrees());
+        Debug.Log("[Pandora] Target Degrees = " + targetDegrees + "  (salin nilai ini ke Target Degrees setelah Stop)");
     }
 
     // Scene view: garis magenta = sumbu putar jarum (harus tegak lurus permukaan kompas)
@@ -176,5 +241,11 @@ public class PandoraCompassPanel : PandoraPanel
         Gizmos.color = Color.magenta;
         Vector3 start = pivot != null ? pivot.position : needle.position;
         Gizmos.DrawLine(start, start + WorldAxis().normalized * 0.3f);
+
+        if (textAnchor != null)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(textAnchor.position, 0.02f);
+        }
     }
 }

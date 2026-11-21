@@ -78,7 +78,9 @@ public class PressButtonEffect : MonoBehaviour
                 closestDist = h.distance;
             }
         }
-        return closest == this && (owner == null || owner.IsControlVisible(col));
+        return closest == this
+            && (owner == null || owner.IsControlVisible(col))
+            && ClickOcclusion.IsFrontmost(col, hits);   // <-- TAMBAHAN
     }
 
     // ---- Fungsi bantu (dipakai juga oleh RadioKeypad) ----
