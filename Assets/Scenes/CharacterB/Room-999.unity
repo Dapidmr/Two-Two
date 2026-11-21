@@ -313,10 +313,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -629,10 +629,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -853,10 +853,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -1077,10 +1077,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -1546,10 +1546,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -1893,10 +1893,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -2138,10 +2138,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -2341,10 +2341,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -2765,6 +2765,7 @@ GameObject:
   - component: {fileID: 260432655}
   - component: {fileID: 260432660}
   - component: {fileID: 260432659}
+  - component: {fileID: 260432661}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Player
@@ -2916,6 +2917,23 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
+--- !u!114 &260432661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 260432654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eac86e6b8c22cb6489c1d7560eb5968f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CrosshairDot
+  dotSize: 3
+  dotColor: {r: 1, g: 1, b: 1, a: 1}
+  outline: 1
+  outlineSize: 0.5
+  confineToWindow: 1
 --- !u!1 &294655244
 GameObject:
   m_ObjectHideFlags: 0
@@ -3202,10 +3220,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -3470,6 +3488,7 @@ Transform:
   - {fileID: 1888684423}
   - {fileID: 742638416}
   - {fileID: 2000043781}
+  - {fileID: 1371028980}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &361879329
@@ -3645,10 +3664,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -4192,10 +4211,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -4688,10 +4707,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -5047,10 +5066,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -5720,10 +5739,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -5944,10 +5963,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -6360,10 +6379,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -6676,10 +6695,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -6881,7 +6900,7 @@ MonoBehaviour:
   - Cube.007
   - Cube.008
   openAxis: {x: 0, y: 0, z: 1}
-  openDistance: 0.4
+  openDistance: 1
   speed: 2
   maxDistance: 3
   zoomPoints:
@@ -7227,10 +7246,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -7472,10 +7491,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -7889,10 +7908,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -8092,10 +8111,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -8429,10 +8448,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -8653,10 +8672,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -9172,10 +9191,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -9401,10 +9420,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -9763,10 +9782,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -10192,10 +10211,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -10629,7 +10648,8 @@ MonoBehaviour:
   tiltOnHover: 0
   tiltAngle: 15
   hingeOnRight: 0
-  bookshelf: {fileID: 0}
+  bookshelf: {fileID: 1787166694}
+  meja: {fileID: 811561797}
   lockOthersOnCollect: 0
   canBeCollected: 0
   onWrongBook:
@@ -10649,8 +10669,8 @@ MonoBehaviour:
   minInspectDistance: 0.1
   maxInspectDistance: 0.5
   zoomSmooth: 10
-  faceLocalAxis: {x: 0, y: 0, z: 1}
-  faceLocalUp: {x: 1, y: 0, z: 0}
+  faceLocalAxis: {x: 0, y: 1, z: 0}
+  faceLocalUp: {x: 0, y: 1, z: 0}
   faceCameraOnInspect: 1
   canOpen: 1
   openClips:
@@ -11086,10 +11106,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -11132,6 +11152,11 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.56, y: 0.41, z: 2}
   m_Center: {x: -0.875, y: 0.174, z: 0}
+--- !u!4 &1371028980 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
+  m_PrefabInstance: {fileID: 1610664289}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1374072792
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11326,10 +11351,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -11642,10 +11667,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -11950,10 +11975,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -12174,10 +12199,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -12511,10 +12536,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -12820,31 +12845,31 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 341058789}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.39855322
+      value: 0.29872075
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.3
+      value: 0.22485384
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.395336
+      value: 0.29630938
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -7.537
+      value: -4.2100134
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.009
+      value: 0.014240743
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.622
+      value: -0.47371083
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalRotation.w
@@ -13122,10 +13147,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -13449,7 +13474,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bookshelf
   promptText: {fileID: 2102563075}
-  inspectHintOpened: Press Esc to close book
+  inspectHintOpened: Press Esc to close book\nScroll to zoom in/out
   inspectHintDefault: 
   heightOffset: 1.5
   frontAngle: 50
@@ -13478,8 +13503,8 @@ MonoBehaviour:
   inspectCameraBack: 1
   panLimitX: 0.5
   panLimitUp: 0.3
-  panLimitDown: 2.5
-  forwardAtBottom: 1.2
+  panLimitDown: 3.5
+  forwardAtBottom: 1.5
 --- !u!1 &1795557376
 GameObject:
   m_ObjectHideFlags: 0
@@ -14088,10 +14113,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -14515,10 +14540,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -15076,10 +15101,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -15729,10 +15754,10 @@ MonoBehaviour:
   inspectMoveSpeed: 5
   rotateSpeed: 0.3
   inspectRadius: 0.2
-  canZoom: 0
+  canZoom: 1
   zoomStep: 0.05
-  minInspectDistance: 0.25
-  maxInspectDistance: 0.9
+  minInspectDistance: 0.1
+  maxInspectDistance: 0.5
   zoomSmooth: 10
   faceLocalAxis: {x: 0, y: 1, z: 0}
   faceLocalUp: {x: 0, y: 0, z: -1}
@@ -15840,5 +15865,4 @@ SceneRoots:
   - {fileID: 610032366}
   - {fileID: 341058789}
   - {fileID: 232260897}
-  - {fileID: 1610664289}
   - {fileID: 504388321}
