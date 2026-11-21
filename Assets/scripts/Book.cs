@@ -38,6 +38,13 @@ public class BookItem : MonoBehaviour
     public float rotateSpeed = 0.4f;       // derajat per pixel drag
     public float inspectRadius = 0.2f;     // ukuran buku saat inspect (radius ujung terjauh, world unit)
 
+    [Header("Zoom Inspect")]
+    public bool canZoom = false;           // centang agar scroll bisa zoom saat inspect
+    public float zoomStep = 0.05f;         // perubahan jarak per notch scroll
+    public float minInspectDistance = 0.25f;
+    public float maxInspectDistance = 0.9f;
+    public float zoomSmooth = 10f;
+
     public Vector3 faceLocalAxis = Vector3.up;   // sumbu lokal buku yang menghadap kamera (rebah: 0,1,0)
     public Vector3 faceLocalUp = Vector3.right;   // sumbu lokal buku (arah spine) yang diarahkan ke atas layar
     public bool faceCameraOnInspect = false;   // centang di buku diary & Hertz Code
@@ -49,6 +56,9 @@ public class BookItem : MonoBehaviour
     public float openUp = 0.08f;             // geser ke atas, menyisakan ruang untuk teks bawah
     public float openScaleMul = 1.3f;        // diperbesar saat terbuka
     public float openRoll = 0f;              // putar searah jarum jam bila halaman miring (derajat)
+    public bool notBook = false;         // true = setelah ditutup kembali ke rotasi saat "E to open", tidak berbalik ke belakang
+    public float panSensitivity = 1f;    // drag saat terbuka: 1 = buku mengikuti kursor persis
+    public Vector2 panLimitAbs = new Vector2(0.3f, 0.2f);   // batas geser absolut (world unit): x = kiri/kanan, y = atas/bawah
 
     [Header("Saat buku diambil")]
     public UnityEvent onCollected;       // opsional: isi nanti (suara, pesan, dll)
@@ -81,11 +91,16 @@ public class BookItem : MonoBehaviour
     private Vector3 viewCenter;          // pusat visual saat ini (berubah saat buku terbuka)
     public float openBlendSpeed = 3f;    // kecepatan geser/scale kembali setelah buku menutup
     public float closeSpeedMul = 1.5f;   // animasi tutup lebih cepat dari buka
+    [Range(0.1f, 0.9f)] public float openPeak = 0.48f;   // posisi clip saat buku terbuka penuh (0..1)
     public float closeSkip = 0.07f;      // lompati bagian diam di awal animasi tutup (0..1 dari clip)
     private float phase = 0f;       // posisi di clip (0..1), 0.5 = terbuka penuh
     private int bookState = 0;      // 0 tertutup, 1 membuka, 2 terbuka, 3 menutup
     private Quaternion inspectTargetRot;
     private bool settlingRot = false;
+    private Quaternion preOpenRot;       // rotasi buku saat E ditekan
+    private Vector2 panOffset;           // geseran x/y (ruang kamera) saat terbuka
+    private float targetInspectDistance;
+    private float currentInspectDistance;
     void Start()
     {
 
@@ -287,6 +302,9 @@ public class BookItem : MonoBehaviour
         inspecting = true;
         float k = bookRadius > 0.0001f ? inspectRadius / bookRadius : 1f;
         targetScale = originalScale * k;
+        targetInspectDistance = inspectDistance;
+        currentInspectDistance = inspectDistance;
+        panOffset = Vector2.zero;
         isHovered = false;
         hoverT = 0f;
         if (hoverOwner == this) hoverOwner = null;
@@ -326,22 +344,24 @@ public class BookItem : MonoBehaviour
                 {
                     bookState = 3;                          // tutup: 50% -> 100%
                     phase = Mathf.Min(1f, phase + closeSkip);
+                    if (notBook) openRot = preOpenRot;
                 }
                 if (bookState != 0) escPressed = false;     // selama animasi, jangan keluar inspect
             }
             else if (ePressed && bookState == 0)
             {
+                preOpenRot = transform.rotation;            // simpan rotasi sebelum buka
                 bookState = 1;                              // buka: 0% -> 50%
                 openRot = Quaternion.AngleAxis(openRoll, -cam.forward) * FaceRot(cam);
             }
 
-            float step = Time.deltaTime / Mathf.Max(0.01f, openDuration) * 0.5f;
+            float step = Time.deltaTime / Mathf.Max(0.01f, openDuration) * 0.5f;   // kecepatan sama seperti sebelumnya
             float prevPhase = phase;
 
             if (bookState == 1)
             {
-                phase = Mathf.MoveTowards(phase, 0.5f, step);
-                if (phase >= 0.5f) bookState = 2;
+                phase = Mathf.MoveTowards(phase, openPeak, step);
+                if (phase >= openPeak) bookState = 2;
             }
             else if (bookState == 3)
             {
@@ -352,12 +372,13 @@ public class BookItem : MonoBehaviour
                     phase = 1f;
                     ApplyOpenPose();
                     Vector3 pivot = transform.TransformPoint(CurrentLocalCenter());
-                    transform.RotateAround(pivot, cam.up, 180f);
+                    if (!notBook) transform.RotateAround(pivot, cam.up, 180f);
 
                     // Reset ke pose 0 (cover depan), lalu jaga pusat visual tetap di pivot
                     phase = 0f;
                     bookState = 0;
-                    settlingRot = false;
+                    settlingRot = notBook;                 // notBook: putar halus kembali ke rotasi awal
+                    if (notBook) inspectTargetRot = preOpenRot;
                     ApplyOpenPose();
 
                     Vector3 newCenterLocal = CurrentLocalCenter();
@@ -393,6 +414,18 @@ public class BookItem : MonoBehaviour
         {
             // Terbuka: dikunci menghadap kamera
             transform.rotation = Quaternion.Slerp(transform.rotation, openRot, Time.deltaTime * inspectMoveSpeed);
+
+            // Drag = geser x/y di bidang layar, rotasi tetap
+            if (Mouse.current.leftButton.isPressed)
+            {
+                Camera c = Camera.main;
+                Vector2 d = Mouse.current.delta.ReadValue();
+                float halfH = currentInspectDistance * Mathf.Tan(c.fieldOfView * 0.5f * Mathf.Deg2Rad);
+                float wpp = (2f * halfH / Screen.height) * panSensitivity;   // world unit per pixel
+                panOffset += d * wpp;
+                panOffset.x = Mathf.Clamp(panOffset.x, -panLimitAbs.x, panLimitAbs.x);
+                panOffset.y = Mathf.Clamp(panOffset.y, -panLimitAbs.y, panLimitAbs.y);
+            }
         }
         else if (Mouse.current.leftButton.isPressed)
         {
@@ -410,7 +443,27 @@ public class BookItem : MonoBehaviour
         Vector3 scaleT = targetScale * Mathf.Lerp(1f, openScaleMul, o);
         transform.localScale = Vector3.Lerp(transform.localScale, scaleT, Time.deltaTime * inspectMoveSpeed);
 
-        Vector3 center = cam.position + cam.forward * inspectDistance + cam.up * (openUp * o);
+        if (canZoom && bookState != 0)
+        {
+            float scroll = Mouse.current.scroll.ReadValue().y;
+            if (Mathf.Abs(scroll) > 0.01f)
+            {
+                targetInspectDistance -= Mathf.Sign(scroll) * zoomStep;
+                targetInspectDistance = Mathf.Clamp(targetInspectDistance, minInspectDistance, maxInspectDistance);
+            }
+        }
+        else
+        {
+            targetInspectDistance = inspectDistance;   // tertutup: kembali ke jarak awal
+        }
+        currentInspectDistance = Mathf.Lerp(currentInspectDistance, targetInspectDistance, Time.deltaTime * zoomSmooth);    
+
+        if (bookState == 0)
+            panOffset = Vector2.Lerp(panOffset, Vector2.zero, Time.deltaTime * inspectMoveSpeed);   // balik ke tengah saat tertutup
+
+        Vector3 center = cam.position + cam.forward * currentInspectDistance
+                         + cam.up * (openUp * o + panOffset.y)
+                         + cam.right * panOffset.x;
         Vector3 wantCenter = bookState != 0 ? CurrentLocalCenter() : localCenter;
         viewCenter = bookState != 0
             ? wantCenter
