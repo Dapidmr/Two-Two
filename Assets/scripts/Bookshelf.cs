@@ -6,7 +6,7 @@ public class Bookshelf : MonoBehaviour
 {
     [Header("UI")]
     public TextMeshProUGUI promptText;      // tulisan "Tekan E"
-    public string inspectHintOpened = "Press Esc to close book";
+    public string inspectHintOpened = "Press Esc to close book\nScroll to zoom in/out";
     public string inspectHintDefault = "Press Esc to back";
     public float heightOffset = 1.5f;
 
@@ -241,20 +241,26 @@ public class Bookshelf : MonoBehaviour
     private Material dimMat;
     private float dimAlpha = 0f;
     private float dimTarget = 0f;
+    private float dimDist, dimW, dimH;
 
     public bool IsInspecting => inspecting;
 
-    public void BeginInspect(float bookDistance, float bookRadius = 0f)
+    public void BeginInspect(float bookDistance, float bookRadius = 0f, bool ignoreDepth = false)
     {
         inspecting = true;
+        dimMat.SetInt("unity_GUIZTestMode", (int)(ignoreDepth
+            ? UnityEngine.Rendering.CompareFunction.Always
+            : UnityEngine.Rendering.CompareFunction.LessEqual));
+        dimMat.renderQueue = ignoreDepth ? 2400 : 3000;
         float dist = bookDistance + bookRadius + dimGap;
-        dimQuad.localPosition = new Vector3(0f, 0f, dist);
+        dimDist = dist;
 
         // Skala quad supaya menutupi seluruh layar di jarak itu (+ margin 20%)
         Camera c = Camera.main;
         float h = 2f * dist * Mathf.Tan(c.fieldOfView * 0.5f * Mathf.Deg2Rad);
         float w = h * c.aspect;
-        dimQuad.localScale = new Vector3(w * 1.2f, h * 1.2f, 1f);
+        dimW = w * 2f;
+        dimH = h * 2f;
 
         dimTarget = dimMax;
         if (inspectHintText != null) inspectHintText.gameObject.SetActive(true);
@@ -277,7 +283,7 @@ public class Bookshelf : MonoBehaviour
     public void SetOpenedHint(bool opened)
     {
         if (inspectHintText == null) return;
-        if (opened) inspectHintText.text = string.IsNullOrEmpty(inspectHintOpened) ? "Press Esc to close book" : inspectHintOpened;
+        if (opened) inspectHintText.text = string.IsNullOrEmpty(inspectHintOpened) ? "Press Esc to close book" : inspectHintOpened.Replace("\\n", "\n");
         else inspectHintText.text = string.IsNullOrEmpty(inspectHintDefault) ? "Press Esc to back" : inspectHintDefault;
     }
     void CreateDim()
@@ -285,14 +291,16 @@ public class Bookshelf : MonoBehaviour
         var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
         q.name = "InspectDim";
         Destroy(q.GetComponent<Collider>());
-        q.transform.SetParent(cam, false);
         q.transform.localRotation = Quaternion.identity;
         q.transform.localScale = new Vector3(10f, 10f, 1f);
 
         var r = q.GetComponent<MeshRenderer>();
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         r.receiveShadows = false;
-        dimMat = new Material(Shader.Find("Sprites/Default"));
+        var sh = Shader.Find("UI/Default");
+        if (sh == null) sh = Shader.Find("Sprites/Default");
+        dimMat = new Material(sh);
+        dimMat.SetInt("unity_GUIZTestMode", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
         dimMat.color = new Color(0f, 0f, 0f, 0f);
         r.material = dimMat;
 
@@ -316,6 +324,12 @@ public class Bookshelf : MonoBehaviour
             if (promptText.gameObject.activeSelf != show) promptText.gameObject.SetActive(show);
         }
         if (dimQuad == null) return;
+        if (cam != null)
+        {
+            dimQuad.position = cam.position + cam.forward * dimDist;
+            dimQuad.rotation = cam.rotation;
+            dimQuad.localScale = new Vector3(dimW, dimH, 1f);
+        }
         dimAlpha = Mathf.MoveTowards(dimAlpha, dimTarget, Time.deltaTime * dimFadeSpeed);
         dimMat.color = new Color(0f, 0f, 0f, dimAlpha);
         dimQuad.gameObject.SetActive(dimAlpha > 0.001f);

@@ -116,6 +116,8 @@ public class BookCabin : MonoBehaviour
     private Vector2 panOffset;           // geseran x/y (ruang kamera) saat terbuka
     private float targetInspectDistance;
     private float currentInspectDistance;
+    private readonly System.Collections.Generic.List<Material> queueMats = new System.Collections.Generic.List<Material>();
+    private readonly System.Collections.Generic.List<int> queueOrig = new System.Collections.Generic.List<int>();
 
     void Start()
     {
@@ -334,6 +336,31 @@ public class BookCabin : MonoBehaviour
             if (c != null) c.SampleAnimation(gameObject, phase * c.length);
     }
 
+    // Buku digambar SETELAH layar redup (queue 3100 > 3000), jadi tidak ikut gelap
+    void SetAboveDim(bool above)
+    {
+        if (above)
+        {
+            if (queueMats.Count > 0 || allRends == null) return;
+            foreach (var r in allRends)
+            {
+                if (r == null) continue;
+                foreach (var m in r.materials)
+                {
+                    queueMats.Add(m);
+                    queueOrig.Add(m.renderQueue);
+                    if (m.renderQueue < 2450) m.renderQueue = 2450;   // tetap opaque (masuk depth prepass), tapi setelah layar redup
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < queueMats.Count; i++)
+                if (queueMats[i] != null) queueMats[i].renderQueue = queueOrig[i];
+            queueMats.Clear();
+            queueOrig.Clear();
+        }
+    }
     void StartInspect()
     {
         activeBook = this;
@@ -365,7 +392,8 @@ public class BookCabin : MonoBehaviour
             settlingRot = true;
         }
 
-        if (bookshelf != null) bookshelf.BeginInspect(inspectDistance, inspectRadius);
+        SetAboveDim(true);
+        if (bookshelf != null) bookshelf.BeginInspect(inspectDistance, inspectRadius, true);
     }
 
     void UpdateInspect()
@@ -537,6 +565,7 @@ public class BookCabin : MonoBehaviour
             transform.rotation = oq;
             transform.localScale = originalScale;
             returning = false;
+            SetAboveDim(false);
         }
     }
 

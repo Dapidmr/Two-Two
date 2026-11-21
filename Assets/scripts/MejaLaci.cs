@@ -87,7 +87,7 @@ public class MejaLaci : MonoBehaviour
         {
             hovered = null;
 
-            if (!block && kb != null && (kb.eKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame))
+            if (!block && kb != null && kb.escapeKey.wasPressedThisFrame)
                 ExitZoom();
 
             if (zoomedDrawer != null && cam != null)
@@ -229,7 +229,7 @@ public class MejaLaci : MonoBehaviour
         if (zoomedDrawer != null)
         {
             if (BookCabin.AnyInspecting) return;
-            DrawLabel("E to close", new Rect(Screen.width * 0.5f - 100, Screen.height - 80, 200, 40));
+            DrawLabel("Esc to close", new Rect(Screen.width * 0.5f - 100, Screen.height - 80, 200, 40));
             return;
         }
 
