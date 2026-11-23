@@ -30,9 +30,12 @@ public class MonocleItem : MonoBehaviour
     {
         foreach (Renderer r in GetComponentsInChildren<Renderer>())
         {
-            Material m = r.material;   // salinan, tidak mengubah asset aslinya
-            if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", MyColor);
-            else if (m.HasProperty("_Color")) m.SetColor("_Color", MyColor);
+            // r.materials = salinan semua slot material, tidak mengubah asset aslinya
+            foreach (Material m in r.materials)
+            {
+                if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", MyColor);
+                else if (m.HasProperty("_Color")) m.SetColor("_Color", MyColor);
+            }
         }
     }
 
@@ -66,9 +69,20 @@ public class MonocleItem : MonoBehaviour
         if (Keyboard.current == null || !Keyboard.current.eKey.wasPressedThisFrame) return;
 
         Transform p = player != null ? player : (Camera.main != null ? Camera.main.transform : null);
-        if (p == null) return;
+        if (p == null)
+        {
+            Debug.LogWarning("[MonocleItem] player kosong dan tidak ada Main Camera");
+            return;
+        }
 
-        if (Vector3.Distance(p.position, transform.position) <= pickupDistance)
+        // jarak ke titik terdekat di permukaan model (bukan ke pivot)
+        float d = Vector3.Distance(p.position, transform.position);
+        Renderer r = GetComponentInChildren<Renderer>();
+        if (r != null) d = Vector3.Distance(p.position, r.bounds.ClosestPoint(p.position));
+
+        Debug.Log($"[MonocleItem {monocleId}] E ditekan | pemain={p.name} | jarak={d:F2} | batas={pickupDistance}");
+
+        if (d <= pickupDistance)
         {
             if (monocleId == 2) GameState.SetMonocle2(true);
             else GameState.SetMonocle(true);

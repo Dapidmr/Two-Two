@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 public class BookFallEvent : MonoBehaviour
 {
@@ -11,21 +12,23 @@ public class BookFallEvent : MonoBehaviour
 
     [Header("Pemicu")]
     public bool listenToRadio = true;
+    public bool testKeyF = true;               // tekan F saat Play untuk menjatuhkan buku
 
     [Header("Mode")]
     public bool useRealPhysics = true;
-    public Transform floorPosition;
+    public Transform floorPosition;            // titik di lantai tempat buku mendarat
 
     [Header("Fisika")]
     public float delay = 0f;
     public float mass = 1f;
-    public Vector3 pushImpulse = new Vector3(0.05f, 0f, 0.02f);
+    public Vector3 pushImpulse = new Vector3(-0.4f, 0f, 0f);   // dipakai kalau Floor Position kosong
     public float spin = 0.05f;
-    public float linearDamping = 1.5f;     // peredam gerak
-    public float angularDamping = 4f;      // peredam putaran
+    public float linearDamping = 0.5f;
+    public float angularDamping = 0.5f;
     public bool ignoreShelfCollision = true;
-    public float shelfIgnoreTime = 0.4f;
-    public bool settleFlat = false;
+    public float shelfIgnoreTime = 1.0f;
+    public bool settleFlat = false;            // true = geser halus ke Floor Position setelah diam
+    public bool layFlat = true;                // rebahkan buku kalau mendarat berdiri
 
     [Header("Suara")]
     public AudioSource audioSource;
@@ -34,8 +37,8 @@ public class BookFallEvent : MonoBehaviour
 
     [Header("Setelah mendarat: bisa diinteract (tekan E)")]
     public bool interactAfterLanding = true;
-    public bool requireFacing = false;           // false = tidak perlu menatap buku tepat
-    public bool debugLog = true;                 // log diagnosis di Console
+    public bool requireFacing = false;
+    public bool debugLog = true;
     public TextMeshProUGUI promptText;
     public MonoBehaviour playerController;
     public Renderer[] playerRenderers;
@@ -71,14 +74,11 @@ public class BookFallEvent : MonoBehaviour
                 if (radio.onPoweredOff == null) radio.onPoweredOff = new UnityEvent();
                 radio.onPoweredOff.AddListener(TriggerFall);
             }
-            else
-            {
-                Debug.LogWarning("[BookFallEvent] RadioTuner tidak ditemukan di scene.");
-            }
+            else Debug.LogWarning("[BookFallEvent] RadioTuner tidak ditemukan di scene.");
         }
 
         if (bookToFall == null)
-            Debug.LogWarning("[BookFallEvent] Book To Fall masih kosong. Drag bukunya ke slot itu.");
+            Debug.LogWarning("[BookFallEvent] Book To Fall masih kosong.");
     }
 
     void OnDestroy()
@@ -89,11 +89,7 @@ public class BookFallEvent : MonoBehaviour
 
     public void TriggerFall()
     {
-        if (bookToFall == null)
-        {
-            Debug.LogWarning("[BookFallEvent] Book To Fall masih kosong. Drag bukunya ke slot itu.");
-            return;
-        }
+        if (bookToFall == null) { Debug.LogWarning("[BookFallEvent] Book To Fall masih kosong."); return; }
         if (hasFallen) return;
 
         hasFallen = true;
@@ -108,7 +104,6 @@ public class BookFallEvent : MonoBehaviour
         GameObject book = bookToFall.gameObject;
         book.SetActive(true);
 
-        // ZoomView dan MonocleLens tidak boleh ikut dimatikan
         foreach (MonoBehaviour mb in book.GetComponents<MonoBehaviour>())
             if (mb != null && mb != this && !(mb is ZoomView) && !(mb is MonocleLens))
                 mb.enabled = false;
@@ -121,10 +116,8 @@ public class BookFallEvent : MonoBehaviour
         UnregisterFromBookshelf(bookCol);
 
         Transform shelfRoot = bookToFall.parent;
-        float floorY = FindFloorY(bookCol, shelfRoot);
-        if (float.IsNaN(floorY))
-            Debug.LogWarning("[BookFallEvent] Tidak ada collider lantai di bawah buku, buku akan tembus. Tambahkan Box Collider di lantai.");
 
+        // Abaikan collider rak dan buku-buku lain sementara, supaya buku tidak tersangkut
         if (ignoreShelfCollision && shelfRoot != null)
         {
             List<Collider> ignored = new List<Collider>();
@@ -147,12 +140,23 @@ public class BookFallEvent : MonoBehaviour
             rb.isKinematic = false;
             rb.useGravity = true;
             rb.mass = mass;
-            rb.linearDamping = linearDamping;
+            rb.linearDamping = 0f;                 // lemparan parabola tidak boleh diredam
             rb.angularDamping = angularDamping;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
 
-            rb.AddForce(pushImpulse, ForceMode.Impulse);
+            if (floorPosition != null)
+            {
+                // Kecepatan horizontal supaya tepat mendarat di Floor Position
+                Vector3 to = floorPosition.position - bookToFall.position;
+                float h = Mathf.Max(0.1f, bookToFall.position.y - floorPosition.position.y);
+                float t = Mathf.Sqrt(2f * h / Mathf.Abs(Physics.gravity.y));
+                rb.linearVelocity = new Vector3(to.x, 0f, to.z) / t;
+            }
+            else
+            {
+                rb.AddForce(pushImpulse, ForceMode.Impulse);
+            }
             rb.AddTorque(Random.insideUnitSphere * spin, ForceMode.Impulse);
         }
         else if (floorPosition != null)
@@ -177,6 +181,9 @@ public class BookFallEvent : MonoBehaviour
 
     void Update()
     {
+        if (testKeyF && Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+            TriggerFall();
+
         RescueIfBelowFloor();
 
         if (interactAfterLanding && fallStarted && !interactReady)
@@ -190,27 +197,25 @@ public class BookFallEvent : MonoBehaviour
             nextDebug = Time.time + 2f;
             Transform p = playerController != null ? playerController.transform : null;
             string dist = p != null ? Vector3.Distance(p.position, BookCenter()).ToString("F2") : "player tidak ditemukan";
-            Debug.Log("[BookFallEvent] siap | jarak pemain ke buku: " + dist + " | radius interaksi: " + interactRadius +
-                      " | ZoomView aktif: " + (zoomView != null && zoomView.enabled));
+            Debug.Log("[BookFallEvent] siap | jarak pemain ke buku: " + dist + " | radius interaksi: " + interactRadius);
         }
     }
 
+    // Pengaman: kalau buku jatuh jauh di bawah lantai, pindahkan ke Floor Position
     void RescueIfBelowFloor()
     {
         if (!hasFallen || rescued || !useRealPhysics || floorPosition == null || bookToFall == null) return;
 
-        if (bookToFall.position.y < floorPosition.position.y - 0.3f)
+        if (bookToFall.position.y < floorPosition.position.y - 0.5f)
         {
             rescued = true;
-
             if (rb != null)
             {
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
                 rb.isKinematic = true;
             }
-
-            bookToFall.position = floorPosition.position;
+            bookToFall.position = floorPosition.position + Vector3.up * 0.05f;
             bookToFall.rotation = floorPosition.rotation;
         }
     }
@@ -230,7 +235,7 @@ public class BookFallEvent : MonoBehaviour
         bool still = rb.linearVelocity.sqrMagnitude < 0.0025f && rb.angularVelocity.sqrMagnitude < 0.01f;
         stillTimer = still ? stillTimer + Time.deltaTime : 0f;
 
-        if ((sinceFall > 0.5f && stillTimer > 0.6f) || sinceFall > 4f || rescued)
+        if ((sinceFall > 1.0f && stillTimer > 0.6f) || sinceFall > 5f || rescued)
         {
             interactReady = true;
             StartCoroutine(SetupInteraction());
@@ -251,6 +256,8 @@ public class BookFallEvent : MonoBehaviour
 
         if (settleFlat && floorPosition != null)
             yield return SettleTo(floorPosition.position, floorPosition.rotation);
+        else if (layFlat)
+            yield return LayFlat();
 
         SphereCollider area = bookToFall.gameObject.AddComponent<SphereCollider>();
         area.isTrigger = true;
@@ -266,8 +273,7 @@ public class BookFallEvent : MonoBehaviour
         zoomView = bookToFall.GetComponent<ZoomView>();
         if (zoomView == null)
         {
-            Debug.LogWarning("[BookFallEvent] ZoomView tidak ada di " + bookToFall.name +
-                             ". Dibuat otomatis, tapi sebaiknya pasang ZoomView di objek yang SAMA dengan Book To Fall.");
+            Debug.LogWarning("[BookFallEvent] ZoomView tidak ada di " + bookToFall.name + ", dibuat otomatis.");
             zoomView = bookToFall.gameObject.AddComponent<ZoomView>();
         }
 
@@ -285,7 +291,6 @@ public class BookFallEvent : MonoBehaviour
         if (hideDuringZoom != null && hideDuringZoom.Length > 0) zoomView.hideDuringZoom = hideDuringZoom;
         if (zoomFieldOfView > 0f) zoomView.zoomFieldOfView = zoomFieldOfView;
 
-        // Cari pemain kalau belum diisi (untuk log diagnosis dan ZoomPoint)
         if (playerController == null) playerController = FindFirstObjectByType<FirstPersonController>();
 
         if (zoomView.onEnter == null) zoomView.onEnter = new UnityEvent();
@@ -320,6 +325,44 @@ public class BookFallEvent : MonoBehaviour
         }
     }
 
+    // Rebahkan buku: sumbu paling tipis diarahkan ke atas, dasar menempel di lantai
+    IEnumerator LayFlat()
+    {
+        Renderer r = bookToFall.GetComponentInChildren<Renderer>();
+        if (r == null) yield break;
+
+        Vector3 size = LocalBookBounds().size;
+        Vector3 thin = Vector3.right;
+        float m = size.x;
+        if (size.y < m) { m = size.y; thin = Vector3.up; }
+        if (size.z < m) { thin = Vector3.forward; }
+
+        Vector3 worldThin = bookToFall.TransformDirection(thin);
+        if (Vector3.Dot(worldThin, Vector3.up) < 0f) worldThin = -worldThin;
+
+        Quaternion target = Quaternion.FromToRotation(worldThin, Vector3.up) * bookToFall.rotation;
+
+        float bottomBefore = r.bounds.min.y;
+        Quaternion r0 = bookToFall.rotation;
+        Vector3 p0 = bookToFall.position;
+
+        bookToFall.rotation = target;
+        float bottomAfter = r.bounds.min.y;
+        bookToFall.rotation = r0;
+
+        Vector3 p1 = p0 + Vector3.up * (bottomBefore - bottomAfter);
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.5f;
+            float k = Mathf.SmoothStep(0f, 1f, t);
+            bookToFall.rotation = Quaternion.Slerp(r0, target, k);
+            bookToFall.position = Vector3.Lerp(p0, p1, k);
+            yield return null;
+        }
+    }
+
     Vector3 BookCenter()
     {
         Renderer r = bookToFall.GetComponentInChildren<Renderer>();
@@ -331,7 +374,6 @@ public class BookFallEvent : MonoBehaviour
         if (zoomPointTf == null || bookToFall == null) return;
 
         Vector3 center = BookCenter();
-
         Transform playerTf = playerController != null ? playerController.transform
                            : (Camera.main != null ? Camera.main.transform : null);
 
@@ -366,33 +408,11 @@ public class BookFallEvent : MonoBehaviour
         return result;
     }
 
-    float FindFloorY(Collider bookCol, Transform shelfRoot)
-    {
-        Vector3 origin = bookCol.bounds.center;
-        RaycastHit[] hits = Physics.RaycastAll(origin, Vector3.down, 50f, ~0, QueryTriggerInteraction.Ignore);
-
-        float best = float.MaxValue;
-        float y = float.NaN;
-        foreach (RaycastHit h in hits)
-        {
-            if (h.collider == bookCol) continue;
-            if (shelfRoot != null && h.collider.transform.IsChildOf(shelfRoot)) continue;
-
-            if (h.distance < best)
-            {
-                best = h.distance;
-                y = h.point.y;
-            }
-        }
-        return y;
-    }
-
     void UnregisterFromBookshelf(Collider col)
     {
         foreach (Bookshelf shelf in FindObjectsByType<Bookshelf>(FindObjectsSortMode.None))
         {
             if (shelf.bookColliders == null) continue;
-
             List<Collider> list = new List<Collider>(shelf.bookColliders);
             if (list.Remove(col)) shelf.bookColliders = list.ToArray();
         }
@@ -400,7 +420,6 @@ public class BookFallEvent : MonoBehaviour
         foreach (ZoomView zv in FindObjectsByType<ZoomView>(FindObjectsSortMode.None))
         {
             if (zv.controlColliders == null) continue;
-
             List<Collider> list = new List<Collider>(zv.controlColliders);
             if (list.Remove(col)) zv.controlColliders = list.ToArray();
         }

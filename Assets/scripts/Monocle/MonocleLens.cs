@@ -1,179 +1,307 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+// Monocle 1: lingkaran yang bisa di-drag. Di dalam lingkaran, halaman buku berubah dari
+// foto 1 (texture halaman asli) menjadi foto 2 (texture "readable").
+// Isi field Lens UI dengan objek MonocleUI (gambar cincin kamu). Kalau dikosongkan,
+// script membuat cincin sederhana sendiri.
 public class MonocleLens : MonoBehaviour
 {
     [System.Serializable]
-    public class LensSlot
+    public class PageEntry
     {
-        public int monocleId = 1;
-        public RectTransform lensUI;
-        public Vector2 startPos = new Vector2(0.9f, 0.18f);
-        [HideInInspector] public bool wasActive;
+        public Renderer page;        // objek halaman (Page / Page.001)
+        public Texture readable;     // foto 2: versi yang terbaca
+        public bool flipX;           // centang kalau foto 2 tampak terbalik kiri-kanan
+        public bool flipY;           // centang kalau foto 2 tampak terbalik atas-bawah
+        [HideInInspector] public RawImage image;
+        [System.NonSerialized] public Mesh baked;
     }
 
-    [Header("Lensa (satu entri per monocle)")]
-    public LensSlot[] lenses = new LensSlot[]
-    {
-        new LensSlot { monocleId = 1, startPos = new Vector2(0.9f, 0.18f) },
-        new LensSlot { monocleId = 2, startPos = new Vector2(0.1f, 0.18f) }
-    };
+    [Header("Halaman yang bisa dibaca dengan lensa")]
+    public PageEntry[] pages;
 
-    [Header("Umum")]
-    public float radiusUV = 0.15f;
-    public float grabRadius = 90f;
-    [Range(0.3f, 1.5f)] public float lensFill = 0.8f;
-    public Transform zoomSource;          // kosong = ZoomView di objek ini
+    [Header("UI lensa")]
+    public RectTransform lensUI;                              // drag objek MonocleUI ke sini
+    [Range(0.3f, 1.2f)] public float lensFill = 0.9f;         // ukuran area terbaca relatif ke cincin (kecilkan kalau tumpang tindih cincin)
+    public bool bringToFront = true;                          // lensa selalu di atas UI lain saat muncul
+    public Vector2 startPos = new Vector2(0.88f, 0.2f);       // posisi awal lensa (0..1 dari layar)
 
-    [Header("Penanda")]
-    public bool tintLens = true;
-    public bool showNumber = true;
-    public Color color1 = new Color(1f, 0.85f, 0.2f);
-    public Color color2 = new Color(0.3f, 0.9f, 1f);
-    public float numberSize = 36f;
+    [Header("Hanya dipakai kalau Lens UI kosong (cincin otomatis)")]
+    [Range(0.1f, 0.6f)] public float sizeFraction = 0.28f;
+    [Range(0.01f, 0.2f)] public float ringWidth = 0.06f;
+    public Color ringColor = new Color(1f, 0.85f, 0.2f);
 
-    private PageLensPage[] pages;
-    private ZoomView zoomView;
-    private int dragIndex = -1;
+    [Header("Uji coba")]
+    public bool testWithoutMonocle = false;   // lensa muncul tanpa harus mengambil monocle 1
+    public bool previewPlacement = false;     // tampilkan foto 2 penuh + semi-transparan untuk cek posisi
 
-    bool HasMonocle(int id) { return id == 2 ? GameState.hasMonocle2 : GameState.hasMonocle; }
-    Color ColorOf(int id) { return id == 2 ? color2 : color1; }
+    [Header("Lain-lain")]
+    public ZoomView zoomView;        // kosong = dicari otomatis
+    public Canvas canvas;            // kosong = Canvas tempat Lens UI berada
+    public bool debugLog = true;
+
+    private RectTransform root;
+    private bool customUI;
+    private Mask maskComp;
+    private Image maskImg;
+    private bool shown;
+    private bool dragging;
+    private Vector2 grabOffset;
 
     void Start()
     {
-        pages = GetComponentsInChildren<PageLensPage>(true);
-        Debug.Log("[MonocleLens] jumlah halaman: " + pages.Length);
+        if (zoomView == null) zoomView = GetComponent<ZoomView>();
+        if (zoomView == null) zoomView = GetComponentInParent<ZoomView>();
+        if (zoomView == null) zoomView = FindFirstObjectByType<ZoomView>();
+        if (zoomView == null) Debug.LogWarning("[MonocleLens] ZoomView tidak ditemukan. Isi field Zoom View.");
 
-        foreach (LensSlot s in lenses)
+        if (canvas == null && lensUI != null) canvas = lensUI.GetComponentInParent<Canvas>();
+        if (canvas == null) canvas = FindFirstObjectByType<Canvas>();
+        if (canvas == null) { Debug.LogError("[MonocleLens] tidak ada Canvas di scene"); enabled = false; return; }
+        canvas = canvas.rootCanvas;
+        if (canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            Debug.LogWarning("[MonocleLens] Canvas sebaiknya Screen Space - Overlay, kalau tidak posisi lensa bisa meleset.");
+
+        BuildUI();
+    }
+
+    void BuildUI()
+    {
+        customUI = lensUI != null;
+
+        if (customUI)
         {
-            if (s == null || s.lensUI == null) continue;
-            if (tintLens)
-            {
-                Graphic g = s.lensUI.GetComponent<Graphic>();
-                if (g != null) g.color = ColorOf(s.monocleId);
-            }
-            if (showNumber) CreateNumber(s);
-            s.lensUI.gameObject.SetActive(false);
+            root = lensUI;
         }
+        else
+        {
+            root = NewRect("MonocleLens_UI", canvas.transform);
+            root.anchorMin = root.anchorMax = new Vector2(0.5f, 0.5f);
+            root.pivot = new Vector2(0.5f, 0.5f);
+        }
+
+        // lapisan pemotong berbentuk lingkaran, sedikit lebih kecil dari cincin (lensFill)
+        RectTransform maskRt = NewRect("LensMask", root);
+        float inset = (1f - lensFill) * 0.5f;
+        maskRt.anchorMin = new Vector2(inset, inset);
+        maskRt.anchorMax = new Vector2(1f - inset, 1f - inset);
+        maskRt.offsetMin = Vector2.zero;
+        maskRt.offsetMax = Vector2.zero;
+
+        maskImg = maskRt.gameObject.AddComponent<Image>();
+        maskImg.sprite = MakeSprite(false, 0f);
+        maskImg.raycastTarget = false;
+        maskComp = maskRt.gameObject.AddComponent<Mask>();
+        maskComp.showMaskGraphic = false;
+
+        // foto 2 per halaman, di dalam pemotong
+        foreach (PageEntry e in pages)
+        {
+            if (e == null || e.page == null) continue;
+            RectTransform rt = NewRect("Foto2_" + e.page.name, maskRt);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            RawImage img = rt.gameObject.AddComponent<RawImage>();
+            img.texture = e.readable;
+            img.raycastTarget = false;
+            e.image = img;
+            if (e.readable == null) Debug.LogError("[MonocleLens] texture readable belum di-assign untuk " + e.page.name);
+        }
+
+        // cincin otomatis hanya kalau tidak memakai MonocleUI sendiri
+        if (!customUI)
+        {
+            RectTransform ringRt = NewRect("Ring", root);
+            Stretch(ringRt);
+            Image ringImg = ringRt.gameObject.AddComponent<Image>();
+            ringImg.sprite = MakeSprite(true, ringWidth);
+            ringImg.color = ringColor;
+            ringImg.raycastTarget = false;
+        }
+
+        root.gameObject.SetActive(false);
     }
 
-    void CreateNumber(LensSlot s)
+    static RectTransform NewRect(string n, Transform parent)
     {
-        GameObject go = new GameObject("Number");
-        go.transform.SetParent(s.lensUI, false);
-
-        RectTransform rt = go.AddComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
-        rt.pivot = new Vector2(0.5f, 1f);
-        rt.anchoredPosition = new Vector2(0f, -8f);
-        rt.sizeDelta = new Vector2(200f, 50f);
-
-        TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
-        t.text = s.monocleId.ToString();
-        t.color = ColorOf(s.monocleId);
-        t.fontSize = numberSize;
-        t.fontStyle = FontStyles.Bold;
-        t.alignment = TextAlignmentOptions.Center;
-        t.raycastTarget = false;
+        GameObject go = new GameObject(n, typeof(RectTransform));
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.SetParent(parent, false);
+        return rt;
     }
 
-    bool SlotActive(LensSlot s)
+    static void Stretch(RectTransform rt)
     {
-        return s != null && s.lensUI != null && zoomView != null && zoomView.ContentOpen && HasMonocle(s.monocleId);
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+    }
+
+    // Membuat sprite lingkaran (atau cincin) lewat kode, jadi tidak butuh file gambar.
+    static Sprite MakeSprite(bool ring, float ringRatio)
+    {
+        const int N = 256;
+        Texture2D tex = new Texture2D(N, N, TextureFormat.RGBA32, false);
+        tex.wrapMode = TextureWrapMode.Clamp;
+        tex.filterMode = FilterMode.Bilinear;
+
+        Color32[] px = new Color32[N * N];
+        float c = (N - 1) * 0.5f;
+        float R = N * 0.5f;
+        float rin = R * (1f - ringRatio);
+
+        for (int y = 0; y < N; y++)
+        {
+            for (int x = 0; x < N; x++)
+            {
+                float d = Vector2.Distance(new Vector2(x, y), new Vector2(c, c));
+                float a = Mathf.Clamp01(R - d);
+                if (ring) a *= Mathf.Clamp01(d - rin);
+                px[y * N + x] = new Color32(255, 255, 255, (byte)(a * 255f));
+            }
+        }
+        tex.SetPixels32(px);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, N, N), new Vector2(0.5f, 0.5f), 100f);
     }
 
     void LateUpdate()
     {
-        if (zoomView == null)
-        {
-            if (zoomSource != null) zoomView = zoomSource.GetComponent<ZoomView>();
-            else zoomView = GetComponent<ZoomView>();
-        }
+        if (root == null) return;
 
-        for (int i = 0; i < lenses.Length; i++)
+        bool hasMonocle = testWithoutMonocle || GameState.hasMonocle;
+        bool active = zoomView != null && zoomView.ContentOpen && hasMonocle;
+        if (active != shown)
         {
-            LensSlot s = lenses[i];
-            if (s == null || s.lensUI == null) continue;
-
-            bool active = SlotActive(s);
-            if (active && !s.wasActive)
+            shown = active;
+            dragging = false;
+            root.gameObject.SetActive(active);
+            if (active)
             {
-                s.lensUI.gameObject.SetActive(true);
-                s.lensUI.position = new Vector2(Screen.width * s.startPos.x, Screen.height * s.startPos.y);
-                s.wasActive = true;
-            }
-            else if (!active && s.wasActive)
-            {
-                Hide(s);
-                if (dragIndex == i) dragIndex = -1;
-                s.wasActive = false;
+                root.position = new Vector3(Screen.width * startPos.x, Screen.height * startPos.y, 0f);
+                if (bringToFront) root.SetAsLastSibling();
+                if (debugLog) Debug.Log("[MonocleLens] lensa muncul");
             }
         }
+        if (!active) return;
 
-        var mouse = Mouse.current;
+        // mode preview: matikan pemotong lingkaran supaya foto 2 terlihat penuh
+        maskComp.enabled = !previewPlacement;
+        maskImg.enabled = !previewPlacement;
+
+        float scale = canvas.scaleFactor;
+        if (!customUI) root.sizeDelta = Vector2.one * (Screen.height * sizeFraction / scale);
+
+        float diameterPx = root.rect.width * root.lossyScale.x;
+
+        HandleDrag(diameterPx);
+        UpdatePages(scale);
+    }
+
+    void HandleDrag(float diameterPx)
+    {
+        Mouse mouse = Mouse.current;
         if (mouse == null) return;
         Vector2 m = mouse.position.ReadValue();
 
         if (mouse.leftButton.wasPressedThisFrame)
         {
-            float best = grabRadius;
-            dragIndex = -1;
-            for (int i = 0; i < lenses.Length; i++)
+            Vector2 center = root.position;
+            if (Vector2.Distance(m, center) <= diameterPx * 0.5f)
             {
-                LensSlot s = lenses[i];
-                if (s == null || !s.wasActive) continue;
-                float d = Vector2.Distance(m, s.lensUI.position);
-                if (d < best) { best = d; dragIndex = i; }
+                dragging = true;
+                grabOffset = center - m;
             }
         }
-        if (mouse.leftButton.wasReleasedThisFrame) dragIndex = -1;
-        if (dragIndex >= 0 && lenses[dragIndex] != null) lenses[dragIndex].lensUI.position = m;
+        if (mouse.leftButton.wasReleasedThisFrame) dragging = false;
 
-        Camera cam = Camera.main;
-        foreach (LensSlot s in lenses)
+        if (dragging)
         {
-            if (s == null || !s.wasActive) continue;
-
-            Ray ray = cam.ScreenPointToRay(s.lensUI.position);
-
-            PageLensPage front = null;
-            Vector2 uv = Vector2.zero;
-            float hitDist = 0f, bestDist = float.MaxValue;
-            foreach (PageLensPage p in pages)
-            {
-                if (!p.gameObject.activeInHierarchy) continue;
-                Vector2 puv; float pd;
-                if (p.RayToUV(ray, out puv, out pd) && pd < bestDist)
-                {
-                    bestDist = pd; front = p; uv = puv; hitDist = pd;
-                }
-            }
-
-            // UBAH: lensa hanya aktif kalau titik tengahnya berada di dalam halaman
-            bool inside = front != null && uv.x >= -0.05f && uv.x <= 1.05f && uv.y >= -0.05f && uv.y <= 1.05f;
-            PageLensPage target = (inside && front.monocleId == s.monocleId) ? front : null;
-
-            float radius = radiusUV;
-            if (target != null)
-            {
-                float pxRadius = s.lensUI.rect.width * 0.5f * s.lensUI.lossyScale.x * lensFill;
-                float worldPerPixel = 2f * hitDist * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) / Screen.height;
-                radius = pxRadius * worldPerPixel / target.WorldHeight();
-            }
-
-            foreach (PageLensPage p in pages)
-                if (p.monocleId == s.monocleId)
-                    p.SetLens(uv, radius, p == target);
+            Vector2 p = m + grabOffset;
+            p.x = Mathf.Clamp(p.x, 0f, Screen.width);
+            p.y = Mathf.Clamp(p.y, 0f, Screen.height);
+            root.position = new Vector3(p.x, p.y, 0f);
         }
     }
 
-    void Hide(LensSlot s)
+    // Foto 2 dipasang tepat di atas halaman (ukuran halaman di layar), tidak ikut bergerak bersama lensa.
+    void UpdatePages(float scale)
     {
-        s.lensUI.gameObject.SetActive(false);
-        foreach (PageLensPage p in pages)
-            if (p.monocleId == s.monocleId)
-                p.SetLens(Vector2.zero, radiusUV, false);
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        foreach (PageEntry e in pages)
+        {
+            if (e == null || e.page == null || e.image == null) continue;
+
+            Rect r;
+            if (!e.page.gameObject.activeInHierarchy || !TryGetScreenRect(e, cam, out r))
+            {
+                e.image.enabled = false;
+                continue;
+            }
+
+            e.image.enabled = true;
+            e.image.color = new Color(1f, 1f, 1f, previewPlacement ? 0.6f : 1f);
+
+            RectTransform rt = e.image.rectTransform;
+            rt.position = new Vector3(r.center.x, r.center.y, 0f);
+            rt.sizeDelta = r.size / scale;
+            e.image.uvRect = new Rect(e.flipX ? 1f : 0f, e.flipY ? 1f : 0f, e.flipX ? -1f : 1f, e.flipY ? -1f : 1f);
+
+            if (debugLog && Time.frameCount % 180 == 0)
+                Debug.Log($"[MonocleLens] {e.page.name} di layar: pos={r.position} ukuran={r.size}");
+        }
+    }
+
+    // Kotak halaman di layar: 8 sudut bounding box mesh diproyeksikan ke layar.
+    // Untuk Skinned Mesh, mesh di-bake dulu supaya bentuknya sesuai pose saat ini.
+    static bool TryGetScreenRect(PageEntry e, Camera cam, out Rect rect)
+    {
+        rect = default;
+        Renderer r = e.page;
+
+        Bounds b;
+        bool local = true;
+        SkinnedMeshRenderer sk = r as SkinnedMeshRenderer;
+        MeshFilter mf = r.GetComponent<MeshFilter>();
+
+        if (sk != null && sk.sharedMesh != null)
+        {
+            if (e.baked == null) e.baked = new Mesh();
+            sk.BakeMesh(e.baked, false);
+            e.baked.RecalculateBounds();
+            b = e.baked.bounds;
+        }
+        else if (mf != null && mf.sharedMesh != null)
+        {
+            b = mf.sharedMesh.bounds;
+        }
+        else
+        {
+            b = r.bounds;
+            local = false;
+        }
+
+        Transform t = r.transform;
+        float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+
+        for (int i = 0; i < 8; i++)
+        {
+            Vector3 sign = new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f);
+            Vector3 corner = b.center + Vector3.Scale(b.extents, sign);
+            Vector3 w = local ? t.TransformPoint(corner) : corner;
+            Vector3 s = cam.WorldToScreenPoint(w);
+            if (s.z <= 0f) return false;
+
+            minX = Mathf.Min(minX, s.x); maxX = Mathf.Max(maxX, s.x);
+            minY = Mathf.Min(minY, s.y); maxY = Mathf.Max(maxY, s.y);
+        }
+
+        rect = Rect.MinMaxRect(minX, minY, maxX, maxY);
+        return true;
     }
 }

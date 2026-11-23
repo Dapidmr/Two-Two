@@ -108,6 +108,7 @@ public class RadioTuner : MonoBehaviour
     private bool hasTuned = false;
     private bool hasPwTuned = false;
     private bool wasTurning = false;
+    private bool wasInMainWindow = false;  // <-- BARU: untuk deteksi "baru saja masuk" area jelas
     private string entered = "";           // angka yang sudah ditekan di keypad
     private bool passwordAccepted = false;   // true = kode sudah benar
 
@@ -298,6 +299,17 @@ public class RadioTuner : MonoBehaviour
         float mainErr = Mathf.Abs(freq - clearMHz);
         bool inMainWindow = mainErr <= clearHalfWidth + 0.0001f;
         clarity = Mathf.Lerp(clarity, StationClarity(mainErr), dt * 10f);
+
+        // --- BARU: restart suara utama dari awal setiap kali BARU SAJA masuk ke area jelas ---
+        // Kalau sebelumnya di luar area jelas (atau radio baru menyala) lalu sekarang pas,
+        // klip akan diputar ulang dari detik 0. Kalau nanti digeser keluar lalu balik lagi,
+        // ini akan ke-trigger lagi karena wasInMainWindow sempat jadi false.
+        if (isOn && inMainWindow && !wasInMainWindow && voiceSource != null)
+        {
+            voiceSource.Stop();
+            voiceSource.Play();
+        }
+        wasInMainWindow = inMainWindow;
 
         bool exactPassword = passwordEnabled && Mathf.Abs(freq - passwordMHz) <= passwordWindow;
         pwClarity = Mathf.Lerp(pwClarity, exactPassword ? 1f : 0f, dt * 10f);
