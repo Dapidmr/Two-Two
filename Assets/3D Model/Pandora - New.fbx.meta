@@ -3,7 +3,17 @@ guid: 74f886bf33c442d4586bda8f2a04b909
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Button 10
+    second: {fileID: 2100000, guid: 5a2c37dce6ccd8a45bd7e1a605c9461d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Compas Base
+    second: {fileID: 2100000, guid: 8d31b27803ad96041ba8f10303d0dc31, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
