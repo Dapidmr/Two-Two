@@ -334,11 +334,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -650,11 +654,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -874,11 +882,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -1098,11 +1110,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -1322,11 +1338,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -1567,11 +1587,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -1914,11 +1938,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -2159,11 +2187,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -2362,11 +2394,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -2742,11 +2778,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -2868,7 +2908,7 @@ Transform:
   m_GameObject: {fileID: 260432654}
   serializedVersion: 2
   m_LocalRotation: {x: 0.020734193, y: 0.0018909716, z: -0.09080402, w: 0.9956511}
-  m_LocalPosition: {x: -1.95, y: 3.04, z: 0.69}
+  m_LocalPosition: {x: 17.61, y: 3.81, z: 8.59}
   m_LocalScale: {x: 1, y: 2.4998999, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3272,11 +3312,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -3525,6 +3569,8 @@ Transform:
   - {fileID: 742638416}
   - {fileID: 2000043781}
   - {fileID: 1371028980}
+  - {fileID: 1739448219}
+  - {fileID: 1324246416}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &361879329
@@ -3716,11 +3762,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -4263,11 +4313,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -4540,11 +4594,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -4759,11 +4817,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -5118,11 +5180,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -5369,11 +5435,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -5828,11 +5898,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -6052,11 +6126,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -6468,11 +6546,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -6784,11 +6866,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -7354,11 +7440,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -7599,11 +7689,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -7635,43 +7729,43 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.425123
+      value: -4.4251018
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.5724778
+      value: 1.5731717
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.82144725
+      value: 0.82161975
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.013115827
+      value: -0.013118123
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.01311583
+      value: -0.013118123
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.7069852
+      value: 0.7069851
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.7069852
+      value: -0.7069851
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: -89.98
+      value: -270
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 2.126007
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 182.126
+      value: 180
       objectReference: {fileID: 0}
     - target: {fileID: -927199367670048503, guid: e3fcaba6aafc2ab4c99e831677cfd8d3, type: 3}
       propertyPath: m_Name
@@ -8070,11 +8164,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -8273,11 +8371,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -8745,11 +8847,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -8969,11 +9075,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -9488,11 +9598,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -9739,11 +9853,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -10101,11 +10219,27 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1324246417}
+        m_TargetAssemblyTypeName: MonologTrigger, Assembly-CSharp
+        m_MethodName: Play
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -10530,11 +10664,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -10683,6 +10821,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 90, z: 0}
+--- !u!1 &1324246415
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1324246416}
+  - component: {fileID: 1324246417}
+  m_Layer: 0
+  m_Name: MonologCollected
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1324246416
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1324246415}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 341058789}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1324246417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1324246415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaf5ce9ee486ae7469ce34904eb132a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MonologTrigger
+  lines:
+  - D*mn it, i slipped it!
+  - But i cant see it below, where it goes!?
+  - Wait... There is a paper, why is there?
+  playOnEnter: 0
+  triggerTag: Player
+  playOnce: 1
+  delay: 0
 --- !u!1001 &1325135778
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10893,11 +11083,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -10990,6 +11184,11 @@ MonoBehaviour:
   notBook: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
+  monologOnClose: 1
+  closeLines:
+  - Hmm... maybe that items would be useful for books that not understandable, like
+    the one that full of symbols?
+  closeMonologOnce: 0
   onCollected:
     m_PersistentCalls:
       m_Calls: []
@@ -11238,11 +11437,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -11477,11 +11680,18 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines:
+  - Dad's Diary...
+  - It feels like he's trying to tell something.
+  - He.. want me to solve it... Maybe its related to compass thing?
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -11722,11 +11932,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -12092,11 +12306,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -12170,7 +12388,7 @@ MonoBehaviour:
   minInspectDistance: 0.1
   maxInspectDistance: 0.3
   zoomSmooth: 10
-  faceLocalAxis: {x: 0, y: 0, z: 1}
+  faceLocalAxis: {x: 0, y: -0.01, z: -1}
   faceLocalUp: {x: 0, y: 0, z: -1}
   faceCameraOnInspect: 1
   canOpen: 1
@@ -12181,11 +12399,17 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 1
+  flipToBackOnOpen: 1
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines:
+  - Hz? Is it some frequencies? Then, I must solve this!
+  - Im sure the frequencies will be useful somewhere else.
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -12400,11 +12624,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -12624,11 +12852,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -12961,11 +13193,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -13710,11 +13946,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -13980,6 +14220,135 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1714261886}
   m_CullTransparentMesh: 1
+--- !u!1 &1739448217
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1739448219}
+  - component: {fileID: 1739448218}
+  m_Layer: 0
+  m_Name: MonologBookshelf
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1739448218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739448217}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaf5ce9ee486ae7469ce34904eb132a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MonologTrigger
+  lines:
+  - 'Its full of Dad''s books!
+
+    I remember he always spent time reading.'
+  - I cant recognize, but i know some of them.
+  - There must be some useful information here...
+  playOnEnter: 0
+  triggerTag: Player
+  playOnce: 0
+  delay: 0.5
+--- !u!4 &1739448219
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739448217}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 341058789}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1784712576
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1784712579}
+  - component: {fileID: 1784712578}
+  - component: {fileID: 1784712577}
+  m_Layer: 0
+  m_Name: IntroMonolog
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1784712577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1784712576}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaf5ce9ee486ae7469ce34904eb132a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MonologTrigger
+  lines:
+  - ...huh? What happened? Where is this?
+  - I was fighting with my brother... And it suddenly dark
+  - I-I heard he said something before we seperated.
+  - Yes! He was told me to.. finding infomation the most i can? Ah, so dizzy...
+  playOnEnter: 1
+  triggerTag: Player
+  playOnce: 1
+  delay: 0
+--- !u!65 &1784712578
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1784712576}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.9979668, y: 0.14755452, z: 4.676562}
+  m_Center: {x: -0.5628109, y: -0.42622274, z: 0.4000299}
+--- !u!4 &1784712579
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1784712576}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 17.326, y: 0.648, z: 7.8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1787166690 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 215e78c7f7d8eb04e82a1d1bb8d0aacd, type: 3}
@@ -14063,6 +14432,21 @@ MonoBehaviour:
   playerRenderers:
   - {fileID: 260432656}
   allowExit: 1
+  onZoomEnter:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1739448218}
+        m_TargetAssemblyTypeName: MonologTrigger, Assembly-CSharp
+        m_MethodName: Play
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   panLimit: {x: 0.5, y: 0.3}
   dragSpeed: 0.002
   dragThreshold: 5
@@ -14700,11 +15084,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -14903,11 +15291,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -15127,11 +15519,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -15464,11 +15860,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -15566,6 +15966,10 @@ MonoBehaviour:
   closeSpeedMul: 1.5
   openPeak: 0.48
   closeSkip: 0.07
+  monologOnClose: 1
+  closeLines:
+  - Absolutely, it must be usefull!
+  closeMonologOnce: 0
 --- !u!1001 &2046223668
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15755,11 +16159,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -16408,11 +16816,15 @@ MonoBehaviour:
   openScaleMul: 1.95
   openRoll: 0
   notBook: 0
+  flipToBackOnOpen: 0
   panSensitivity: 1
   panLimitAbs: {x: 0.3, y: 0.2}
   onCollected:
     m_PersistentCalls:
       m_Calls: []
+  monologOnClose: 1
+  closeLines: []
+  closeMonologOnce: 0
   openBlendSpeed: 3
   closeSpeedMul: 1.5
   openPeak: 0.48
@@ -16505,3 +16917,4 @@ SceneRoots:
   - {fileID: 232260897}
   - {fileID: 504388321}
   - {fileID: 927161228}
+  - {fileID: 1784712579}

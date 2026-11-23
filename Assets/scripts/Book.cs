@@ -57,11 +57,18 @@ public class BookItem : MonoBehaviour
     public float openScaleMul = 1.3f;        // diperbesar saat terbuka
     public float openRoll = 0f;              // putar searah jarum jam bila halaman miring (derajat)
     public bool notBook = false;         // true = setelah ditutup kembali ke rotasi saat "E to open", tidak berbalik ke belakang
+    public bool flipToBackOnOpen = false;    // centang di kertas: saat "E to open", pindah ke sisi belakang
     public float panSensitivity = 1f;    // drag saat terbuka: 1 = buku mengikuti kursor persis
     public Vector2 panLimitAbs = new Vector2(0.3f, 0.2f);   // batas geser absolut (world unit): x = kiri/kanan, y = atas/bawah
 
     [Header("Saat buku diambil")]
     public UnityEvent onCollected;       // opsional: isi nanti (suara, pesan, dll)
+
+    [Header("Monolog saat buku ditutup")]
+    public bool monologOnClose = true;           // centang = aktif, hapus centang = mati
+    [TextArea(2, 4)] public string[] closeLines; // satu elemen = satu baris monolog
+    public bool closeMonologOnce = false;        // true = hanya saat pertama kali ditutup
+    private bool closeMonologPlayed;
 
     private Vector3 originalPos;
     private bool isHovered = false;
@@ -281,11 +288,10 @@ public class BookItem : MonoBehaviour
         return first ? localCenter : lb.center;
     }
 
-    Quaternion FaceRot(Transform cam)
+    Quaternion FaceRot(Transform cam, bool back = false)
     {
-        // Frame buku: z = sumbu yang menghadap kamera, y = sumbu yang naik di layar
-        Quaternion local = Quaternion.LookRotation(faceLocalAxis.normalized, faceLocalUp.normalized);
-        // Frame layar: z = menjauhi kamera, y = atas kamera
+        Vector3 axis = back ? -faceLocalAxis : faceLocalAxis;   // sisi belakang = sumbu hadap dibalik
+        Quaternion local = Quaternion.LookRotation(axis.normalized, faceLocalUp.normalized);
         Quaternion view = Quaternion.LookRotation(-cam.forward, cam.up);
         return view * Quaternion.Inverse(local);
     }
@@ -295,6 +301,16 @@ public class BookItem : MonoBehaviour
         if (openClips == null) return;
         foreach (var c in openClips)
             if (c != null) c.SampleAnimation(gameObject, phase * c.length);
+    }
+
+    void PlayCloseMonolog()
+    {
+        if (!monologOnClose || closeLines == null || closeLines.Length == 0) return;
+        if (closeMonologOnce && closeMonologPlayed) return;
+        if (Monolog.Instance == null) return;
+
+        closeMonologPlayed = true;
+        Monolog.Instance.Play(closeLines);
     }
     void StartInspect()
     {
@@ -352,7 +368,7 @@ public class BookItem : MonoBehaviour
             {
                 preOpenRot = transform.rotation;            // simpan rotasi sebelum buka
                 bookState = 1;                              // buka: 0% -> 50%
-                openRot = Quaternion.AngleAxis(openRoll, -cam.forward) * FaceRot(cam);
+                openRot = Quaternion.AngleAxis(openRoll, -cam.forward) * FaceRot(cam, flipToBackOnOpen);
             }
 
             float step = Time.deltaTime / Mathf.Max(0.01f, openDuration) * 0.5f;   // kecepatan sama seperti sebelumnya
@@ -386,6 +402,7 @@ public class BookItem : MonoBehaviour
                     viewCenter = newCenterLocal;   // Lerp ke localCenter mulai dari sini, bukan dari nilai lama
 
                     prevPhase = phase;             // pose sudah diterapkan, tidak perlu lagi di bawah
+                    PlayCloseMonolog();
                 }
             }
 

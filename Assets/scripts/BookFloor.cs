@@ -48,6 +48,12 @@ public class BookFloor : MonoBehaviour
     [Range(0.1f, 0.9f)] public float openPeak = 0.48f;
     public float closeSkip = 0.07f;
 
+    [Header("Monolog saat buku ditutup")]
+    public bool monologOnClose = true;           // centang = aktif, hapus centang = mati
+    [TextArea(2, 4)] public string[] closeLines; // satu elemen = satu baris monolog
+    public bool closeMonologOnce = false;        // true = hanya saat pertama kali ditutup
+    private bool closeMonologPlayed;
+
     public static bool AnyInspecting => activeBook != null;
 
     // ===== state =====
@@ -279,6 +285,16 @@ public class BookFloor : MonoBehaviour
         if (playerController != null) playerController.enabled = true;    // OnEnable mengunci kursor lagi
     }
 
+    void PlayCloseMonolog()
+    {
+        if (!monologOnClose || closeLines == null || closeLines.Length == 0) return;
+        if (closeMonologOnce && closeMonologPlayed) return;
+        if (Monolog.Instance == null) return;
+
+        closeMonologPlayed = true;
+        Monolog.Instance.Play(closeLines);
+    }
+
     void StartInspect()
     {
         activeBook = this;
@@ -375,6 +391,7 @@ public class BookFloor : MonoBehaviour
                     viewCenter = newCenterLocal;
 
                     prevPhase = phase;
+                    PlayCloseMonolog();
                 }
             }
 

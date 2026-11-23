@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
+using UnityEngine.Events;
 
 public class Bookshelf : MonoBehaviour
 {
@@ -29,7 +30,10 @@ public class Bookshelf : MonoBehaviour
 
     [Header("Keluar dari zoom")]
     public bool allowExit = true;           // false = pemain tidak bisa keluar (diatur script lain, misal RadioTuner)
-    
+
+    [Header("Events")]
+    public UnityEvent onZoomEnter;          // dipanggil saat E ditekan dan mode zoom dimulai
+
     [Header("Pan (drag mouse saat zoom)")]
     public Vector2 panLimit = new Vector2(0.5f, 0.3f); // batas geser (x = kiri-kanan, y = atas-bawah), satuan unit world
     public float dragSpeed = 0.0f;                   // unit world per pixel drag
@@ -202,6 +206,7 @@ public class Bookshelf : MonoBehaviour
         SetBooksInteractable(true);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        onZoomEnter.Invoke();
     }
 
     void ExitZoom()

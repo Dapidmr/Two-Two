@@ -65,6 +65,12 @@ public class BookCabin : MonoBehaviour
     public float panSensitivity = 1f;    // drag saat terbuka: 1 = buku mengikuti kursor persis
     public Vector2 panLimitAbs = new Vector2(0.3f, 0.2f);   // batas geser absolut (world unit): x = kiri/kanan, y = atas/bawah
 
+    [Header("Monolog saat buku ditutup")]
+    public bool monologOnClose = true;           // centang = aktif, hapus centang = mati
+    [TextArea(2, 4)] public string[] closeLines; // satu elemen = satu baris monolog
+    public bool closeMonologOnce = false;        // true = hanya saat pertama kali ditutup
+    private bool closeMonologPlayed;
+
     [Header("Saat buku diambil")]
     public UnityEvent onCollected;       // opsional: isi nanti (suara, pesan, dll)
 
@@ -361,6 +367,16 @@ public class BookCabin : MonoBehaviour
             queueOrig.Clear();
         }
     }
+
+    void PlayCloseMonolog()
+    {
+        if (!monologOnClose || closeLines == null || closeLines.Length == 0) return;
+        if (closeMonologOnce && closeMonologPlayed) return;
+        if (Monolog.Instance == null) return;
+
+        closeMonologPlayed = true;
+        Monolog.Instance.Play(closeLines);
+    }
     void StartInspect()
     {
         activeBook = this;
@@ -452,6 +468,7 @@ public class BookCabin : MonoBehaviour
                     viewCenter = newCenterLocal;   // Lerp ke localCenter mulai dari sini, bukan dari nilai lama
 
                     prevPhase = phase;             // pose sudah diterapkan, tidak perlu lagi di bawah
+                    PlayCloseMonolog();
                 }
             }
 
