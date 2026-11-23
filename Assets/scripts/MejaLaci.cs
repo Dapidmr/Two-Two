@@ -15,6 +15,7 @@ public class MejaLaci : MonoBehaviour
     [Header("Zoom (urutan SAMA dengan Drawer Names)")]
     public Transform[] zoomPoints;                  // 1 empty per laci, di atas laci. Kosong = laci buka tanpa zoom
     public float cameraSpeed = 5f;
+    public bool zoomHintOnlyWhenAimed = true;   // false = hint tetap di bawah layar
 
     class Drawer
     {
@@ -26,12 +27,15 @@ public class MejaLaci : MonoBehaviour
 
     readonly Dictionary<Transform, Drawer> drawers = new Dictionary<Transform, Drawer>();
     Drawer hovered;
+    string hitList;
+    string lastHitName;
     GUIStyle style, shadow;
 
     // ===== zoom =====
     Drawer zoomedDrawer;
     bool returning;
     bool prevInspecting;
+    bool zoomAimed;
     Transform cam;
     Vector3 camOriginalPos;
     Quaternion camOriginalRot;
@@ -53,7 +57,12 @@ public class MejaLaci : MonoBehaviour
             var t = FindDeep(transform, drawerNames[i]);
             if (t == null) { Debug.LogWarning("Laci tidak ditemukan: " + drawerNames[i]); continue; }
 
-            if (t.GetComponent<Collider>() == null) t.gameObject.AddComponent<BoxCollider>();
+            foreach (var old in t.GetComponents<Collider>()) Destroy(old);
+            var mf = t.GetComponent<MeshFilter>();
+            if (mf != null && mf.sharedMesh != null)
+                t.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
+            else
+                t.gameObject.AddComponent<BoxCollider>();
 
             drawers[t] = new Drawer
             {
@@ -72,7 +81,17 @@ public class MejaLaci : MonoBehaviour
             playerRb = p.GetComponent<Rigidbody>();
         }
     }
-
+    void OnDrawGizmos()
+    {
+        if (!Application.isPlaying) return;
+        foreach (var d in drawers.Values)
+        {
+            var col = d.t.GetComponent<Collider>();
+            if (col == null) continue;
+            Gizmos.color = (d == hovered) ? Color.red : Color.green;
+            Gizmos.DrawWireCube(col.bounds.center, col.bounds.size);
+        }
+    }
     void Update()
     {
         var kb = Keyboard.current;
@@ -86,7 +105,20 @@ public class MejaLaci : MonoBehaviour
         if (zoomedDrawer != null)
         {
             hovered = null;
-
+            zoomAimed = false;
+            if (!block && Mouse.current != null && Camera.main != null)
+            {
+                Ray zr = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+                var zh = Physics.RaycastAll(zr, 100f, ~0, QueryTriggerInteraction.Ignore);
+                System.Array.Sort(zh, (a, b) => a.distance.CompareTo(b.distance));
+                foreach (var hit in zh)
+                {
+                    if (IsPlayer(hit.transform)) continue;
+                    zoomAimed = hit.transform.IsChildOf(zoomedDrawer.t)
+                                && hit.collider.GetComponentInParent<BookCabin>() == null;
+                    break;
+                }
+            }
             if (!block && kb != null && kb.escapeKey.wasPressedThisFrame)
                 ExitZoom();
 
@@ -128,21 +160,26 @@ public class MejaLaci : MonoBehaviour
             Ray ray = c.ScreenPointToRay(screenPos);
             var hits = Physics.RaycastAll(ray, maxDistance, ~0, QueryTriggerInteraction.Ignore);
             System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            hitList = string.Join(", ", System.Array.ConvertAll(hits, h => h.collider.name + " " + h.distance.ToString("F2")));
 
             foreach (var hit in hits)
             {
                 if (IsPlayer(hit.transform)) continue; // lewati badan player
+                if (hit.collider.GetComponentInParent<BookCabin>() != null) continue; // collider buku tidak mewakili laci
 
-                // naik ke parent sampai ketemu laci (supaya BookMonocle dkk tetap terhitung)
+                lastHitName = hit.collider.name;
+
+                // naik ke parent sampai ketemu laci
                 for (var t = hit.transform; t != null; t = t.parent)
                     if (drawers.TryGetValue(t, out var d)) { hovered = d; break; }
 
-                break; // benda pertama selain player yang kena
+                break; // benda pertama selain player dan buku yang kena
             }
         }
 
         if (hovered != null && kb != null && kb.eKey.wasPressedThisFrame)
         {
+            Debug.Log("Ray kena: " + hitList + "  ->  laci: " + hovered.t.name);
             if (!hovered.isOpen && hovered.zoomPoint != null)
             {
                 hovered.isOpen = true;
@@ -229,7 +266,16 @@ public class MejaLaci : MonoBehaviour
         if (zoomedDrawer != null)
         {
             if (BookCabin.AnyInspecting) return;
-            DrawLabel("Esc to close", new Rect(Screen.width * 0.5f - 100, Screen.height - 80, 200, 40));
+            if (zoomHintOnlyWhenAimed)
+            {
+                if (!zoomAimed || Mouse.current == null) return;
+                Vector2 m = Mouse.current.position.ReadValue();
+                DrawLabel("Esc to close", new Rect(m.x - 100, Screen.height - m.y + 25, 200, 40));
+            }
+            else
+            {
+                DrawLabel("Esc to close", new Rect(Screen.width * 0.5f - 100, Screen.height - 80, 200, 40));
+            }
             return;
         }
 
