@@ -41,6 +41,10 @@ public class PandoraController : MonoBehaviour
     public float showcaseLightIntensity = 0.6f;     // turunkan kalau kertas terlalu putih silau
     public float showcaseAmbient = 0.4f;
 
+    [Header("Layer Showcase")]
+    [Tooltip("Nama Layer khusus untuk objek Hertz Code saat ditampilkan. Buat dulu di Project Settings > Tags and Layers, lalu isi nama yang sama persis di sini.")]
+    public string showcaseLayerName = "HertzCodeShowcase";
+
     [Header("Tulisan di kertas")]
     [TextArea] public string hertzCodeText = "92401";   // isi kodenya di sini (boleh beberapa baris)
     public TMP_FontAsset showcaseFont;              // opsional: font lain (misal tulisan tangan)
@@ -239,7 +243,7 @@ public class PandoraController : MonoBehaviour
         if (hertzCodePrefab != null)
         {
             holder = BuildShowcase();
-            baseScale = holder.localScale;
+            if (holder != null) baseScale = holder.localScale;
         }
         else
         {
@@ -334,14 +338,29 @@ public class PandoraController : MonoBehaviour
         }
     }
 
-    // Panggung objek: kamera hitam sendiri + lampu, jauh di bawah dunia game supaya tidak ada yang ikut terlihat.
-    // Mengembalikan wadah (holder) yang dipakai untuk animasi membesar dan berputar.
+    // ===== PERBAIKAN UTAMA =====
+    // Dulu: objek "disembunyikan" dengan menaruhnya di Y = -10000, dan kamera lain tetap bisa
+    // merendernya kalau culling mask-nya default (Everything) -> rawan ketimpa saat ada
+    // perubahan scene/kamera dari merge teman, dan rawan jitter presisi float karena sejauh itu dari origin.
+    // Sekarang: objek ditaruh di origin (0,0,0) lokal wadah, tapi diisolasi total lewat Layer +
+    // Camera.cullingMask, sehingga HANYA kamera showcase ini yang bisa melihatnya, di manapun
+    // posisinya, dan kamera lain (termasuk kamera utama) tidak pernah merendernya.
     Transform BuildShowcase()
     {
-        Vector3 basePos = new Vector3(0f, -10000f, 0f);
+        int layer = LayerMask.NameToLayer(showcaseLayerName);
+        if (layer == -1)
+        {
+            Debug.LogError("[Pandora] Layer '" + showcaseLayerName +
+                "' belum dibuat. Buka Project Settings > Tags and Layers, tambahkan layer ini, " +
+                "lalu isi nama yang sama di field 'Showcase Layer Name'. Showcase dibatalkan.");
+            return null;
+        }
+
+        Vector3 basePos = Vector3.zero;
 
         GameObject holder = new GameObject("HertzCodeShowcase");
         holder.transform.position = basePos;
+        SetLayerRecursive(holder, layer);
 
         GameObject inst = Instantiate(hertzCodePrefab, holder.transform);
         inst.SetActive(true);
@@ -349,6 +368,7 @@ public class PandoraController : MonoBehaviour
         Quaternion prefabRot = hertzCodePrefab.transform.localRotation;
         inst.transform.localRotation = prefabRot;
         inst.transform.localScale = hertzCodePrefab.transform.localScale * showcaseScale;
+        SetLayerRecursive(inst, layer);
 
         // Hadapkan sisi terlebar (permukaan lempengan) ke kamera. Kamera memandang ke arah +Z dari sisi -Z.
         if (autoFaceCamera)
@@ -368,19 +388,25 @@ public class PandoraController : MonoBehaviour
 
         // Pusatkan objek di titik tengah wadah
         Bounds b = GetBounds(inst);
+        if (b.size.sqrMagnitude <= 0.0001f)
+        {
+            Debug.LogWarning("[Pandora] Bounds objek Hertz Code sangat kecil/kosong (" + b.size +
+                "). Cek apakah prefab punya Renderer yang aktif.");
+        }
         inst.transform.position += basePos - b.center;
         b = GetBounds(inst);
         float radius = Mathf.Max(b.extents.magnitude, 0.01f);
 
-        CreatePaperText(holder.transform, b);
+        CreatePaperText(holder.transform, b, layer);
 
-        // Kamera: latar hitam, di atas semua kamera lain
+        // Kamera: latar hitam, di atas semua kamera lain, HANYA merender layer showcase
         GameObject camGo = new GameObject("HertzCodeCamera");
         Camera cam = camGo.AddComponent<Camera>();
         cam.clearFlags = CameraClearFlags.SolidColor;
         cam.backgroundColor = Color.black;
         cam.fieldOfView = showcaseFov;
         cam.depth = 100f;
+        cam.cullingMask = 1 << layer;          // <-- kunci: kamera ini cuma lihat layer showcase
 
         float dist = radius / Mathf.Sin(showcaseFov * 0.5f * Mathf.Deg2Rad) * showcaseMargin;
         cam.transform.position = basePos + new Vector3(0f, 0f, -dist);
@@ -395,6 +421,8 @@ public class PandoraController : MonoBehaviour
         Debug.Log("[Pandora] Showcase: ukuran objek " + b.size + ", jarak kamera " + dist.ToString("0.00"));
 
         // Lampu searah pandangan kamera (sedikit miring supaya ada bayangan bentuk)
+        // Catatan: lampu directional menerangi SEMUA layer secara default (cullingMask lampu = Everything),
+        // jadi ini aman dipakai bersama objek di layer showcase tanpa perlu diubah.
         GameObject lightGo = new GameObject("HertzCodeLight");
         lightGo.transform.SetParent(camGo.transform, false);
         lightGo.transform.localRotation = Quaternion.Euler(20f, -20f, 0f);
@@ -402,17 +430,26 @@ public class PandoraController : MonoBehaviour
         l.type = LightType.Directional;
         l.intensity = showcaseLightIntensity;
         l.shadows = LightShadows.None;
+        l.cullingMask = 1 << layer;            // supaya tidak ikut menerangi objek lain di scene
 
         return holder.transform;
     }
 
+    void SetLayerRecursive(GameObject go, int layer)
+    {
+        go.layer = layer;
+        foreach (Transform child in go.transform)
+            SetLayerRecursive(child.gameObject, layer);
+    }
+
     // Tulisan kode di permukaan kertas (ikut berputar bersama kertas, hanya terlihat dari sisi depan)
-    void CreatePaperText(Transform holder, Bounds b)
+    void CreatePaperText(Transform holder, Bounds b, int layer)
     {
         if (string.IsNullOrEmpty(hertzCodeText)) return;
 
         GameObject go = new GameObject("HertzCodeText");
         go.transform.SetParent(holder, false);
+        go.layer = layer;
         float depth = Mathf.Max(0.002f, b.size.z * 0.5f + 0.002f);       // sedikit di depan permukaan kertas
         go.transform.localPosition = new Vector3(b.size.x * textOffset.x, b.size.y * textOffset.y, -depth);
         go.transform.localRotation = Quaternion.identity;
@@ -458,7 +495,8 @@ public class PandoraController : MonoBehaviour
         Mesh src = mf.sharedMesh;
         if (!src.isReadable)
         {
-            Debug.LogWarning("[Pandora] Mesh '" + src.name + "' tidak bisa dibaca (Read/Write mati), sisi belakang kertas tidak ditambahkan.");
+            Debug.LogWarning("[Pandora] Mesh '" + src.name + "' tidak bisa dibaca (Read/Write mati di Import Settings), " +
+                "sisi belakang kertas TIDAK ditambahkan. Aktifkan 'Read/Write Enabled' pada mesh ini kalau mau sisi belakang kertas kelihatan saat diputar.");
             return;
         }
 
@@ -480,6 +518,7 @@ public class PandoraController : MonoBehaviour
 
         GameObject back = new GameObject("BackFaces");
         back.transform.SetParent(mf.transform, false);
+        back.layer = mf.gameObject.layer;        // <-- penting: ikut layer showcase, bukan default
         back.AddComponent<MeshFilter>().sharedMesh = flipped;
         back.AddComponent<MeshRenderer>().sharedMaterials = r.sharedMaterials;
     }

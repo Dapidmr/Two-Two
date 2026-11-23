@@ -7,13 +7,33 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: 10 Button
+    second: {fileID: 2100000, guid: 5a2c37dce6ccd8a45bd7e1a605c9461d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Button 10
     second: {fileID: 2100000, guid: 5a2c37dce6ccd8a45bd7e1a605c9461d, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Compas
+    second: {fileID: 2100000, guid: 8d31b27803ad96041ba8f10303d0dc31, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Compas Base
     second: {fileID: 2100000, guid: 8d31b27803ad96041ba8f10303d0dc31, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Domino
+    second: {fileID: 2100000, guid: 45827c293f9c95a4fac830243f88eac0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Pandora_
+    second: {fileID: 2100000, guid: 75e7bd4ecd468654ca97fe64c3927283, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
