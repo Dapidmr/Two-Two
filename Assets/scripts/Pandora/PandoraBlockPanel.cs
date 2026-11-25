@@ -41,6 +41,10 @@ public class PandoraBlockPanel : PandoraPanel
     public Vector3 faceLocalAxis = new Vector3(0f, 0f, 1f);
     [Tooltip("Sumbu LOKAL balok yang mengarah ke ATAS layar. Sumbu terpanjang balok akan jadi mendatar.")]
     public Vector3 faceLocalUp = new Vector3(1f, 0f, 0f);
+    [Tooltip("Putaran tambahan KARTU di depan kamera (derajat, bisa diubah saat Play). X = mendongak/menunduk, Y = putar kiri-kanan, Z = putar searah jarum jam. Y = 180 membalik sisi, Z = 180 membalik atas-bawah.")]
+    public Vector3 cardRotationOffset = Vector3.zero;
+    [Tooltip("Putaran tambahan balok saat sudah di lubang (derajat, relatif terhadap Slot). Pakai kalau balok di lubang menghadap terbalik.")]
+    public Vector3 slotRotationOffset = Vector3.zero;
 
     [Header("Gerak")]
     public float flySpeed = 7f;
@@ -285,7 +289,7 @@ public class PandoraBlockPanel : PandoraPanel
         {
             Transform hole = states[s.holeIndex].slot;
             pos = hole.position;
-            rot = hole.rotation;
+            rot = SlotRot(hole);
             scale = s.origLocalScale;
         }
         else if (s.pose == Pose.Card)
@@ -322,6 +326,11 @@ public class PandoraBlockPanel : PandoraPanel
         }
     }
 
+    Quaternion SlotRot(Transform hole)
+    {
+        return hole.rotation * Quaternion.Euler(slotRotationOffset);
+    }
+
     void GetFaceAxes(out Vector3 a, out Vector3 u)
     {
         a = faceLocalAxis.sqrMagnitude > 0.0001f ? faceLocalAxis.normalized : Vector3.forward;
@@ -336,7 +345,7 @@ public class PandoraBlockPanel : PandoraPanel
         GetFaceAxes(out a, out u);
 
         Quaternion local = Quaternion.LookRotation(a, u);
-        Quaternion view = Quaternion.LookRotation(-focusPoint.forward, focusPoint.up);
+        Quaternion view = Quaternion.LookRotation(-focusPoint.forward, focusPoint.up) * Quaternion.Euler(cardRotationOffset);
         return view * Quaternion.Inverse(local);
     }
 
@@ -529,7 +538,7 @@ public class PandoraBlockPanel : PandoraPanel
             Transform hole = states[s.holeIndex].slot;
             s.t.SetParent(owner != null ? owner.transform : hole.parent, true);
             s.t.position = hole.position;
-            s.t.rotation = hole.rotation;
+            s.t.rotation = SlotRot(hole);
         }
 
         SetSolved();
