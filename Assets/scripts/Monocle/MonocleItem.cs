@@ -1,12 +1,16 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class MonocleItem : MonoBehaviour
 {
     public int monocleId = 1;             // 1 atau 2
-    public float pickupDistance = 1.5f;
-    public Transform player;              // drag Capsule
+
+    [Header("Interaksi")]
+    public float pickupDistance = 3f;     // jarak maksimal dari kamera ke monocle
+    public float aimPadding = 0.1f;       // area bidik diperbesar sedikit supaya benda kecil mudah diarahkan
+    public string takeText = "Press E to Take";
 
     [Header("Penanda")]
     public bool tintItem = true;          // warnai objek monocle sesuai nomornya
@@ -15,6 +19,9 @@ public class MonocleItem : MonoBehaviour
     public Color color2 = new Color(0.3f, 0.9f, 1f);    // biru muda
     public float labelSize = 1.5f;        // besar tulisan, sesuaikan dengan skala ruanganmu
     public float labelHeight = 0.3f;      // tinggi label di atas objek
+
+    [Header("Event")]
+    public UnityEvent onPickedUp;         // BARU: nyala saat monocle diambil (untuk monolog)
 
     private Transform labelTf;
 
@@ -66,30 +73,59 @@ public class MonocleItem : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current == null || !Keyboard.current.eKey.wasPressedThisFrame) return;
+        var c = Camera.main;
+        if (c == null || Mouse.current == null) return;
 
-        Transform p = player != null ? player : (Camera.main != null ? Camera.main.transform : null);
-        if (p == null)
+        // kursor terkunci -> tengah layar, kursor bebas -> posisi mouse
+        Vector2 screenPos = Cursor.lockState == CursorLockMode.Locked
+            ? new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)
+            : Mouse.current.position.ReadValue();
+
+        Ray ray = c.ScreenPointToRay(screenPos);
+
+        // area bidik = gabungan semua renderer di objek ini, diperbesar sedikit
+        var rends = GetComponentsInChildren<Renderer>();
+        if (rends.Length == 0) return;
+        Bounds b = rends[0].bounds;
+        foreach (var r in rends) b.Encapsulate(r.bounds);
+        b.Expand(aimPadding * 2f);
+
+        if (!b.IntersectRay(ray, out float dist)) return;
+        if (dist > pickupDistance) return;
+
+        // cek tidak ada benda lain yang menghalangi (selain player dan objek ini sendiri)
+        var hits = Physics.RaycastAll(ray, dist, ~0, QueryTriggerInteraction.Ignore);
+        foreach (var hit in hits)
         {
-            Debug.LogWarning("[MonocleItem] player kosong dan tidak ada Main Camera");
-            return;
+            if (IsPlayer(hit.transform)) continue;
+            if (hit.transform.IsChildOf(transform)) continue;
+            if (hit.distance < dist - 0.05f) return;   // ada penghalang di depan
         }
 
-        // jarak ke titik terdekat di permukaan model (bukan ke pivot)
-        float d = Vector3.Distance(p.position, transform.position);
-        Renderer r = GetComponentInChildren<Renderer>();
-        if (r != null) d = Vector3.Distance(p.position, r.bounds.ClosestPoint(p.position));
+        HintUI.ShowAim(takeText);
 
-        Debug.Log($"[MonocleItem {monocleId}] E ditekan | pemain={p.name} | jarak={d:F2} | batas={pickupDistance}");
+        var kb = Keyboard.current;
+        if (kb != null && kb.eKey.wasPressedThisFrame)
+            Pickup();
+    }
 
-        if (d <= pickupDistance)
-        {
-            if (monocleId == 2) GameState.SetMonocle2(true);
-            else GameState.SetMonocle(true);
+    void Pickup()
+    {
+        if (monocleId == 2) GameState.SetMonocle2(true);
+        else GameState.SetMonocle(true);
 
-            Debug.Log("[MonocleItem] Monocle " + monocleId + " diambil");
-            if (labelTf != null) Destroy(labelTf.gameObject);
-            gameObject.SetActive(false);
-        }
+        Debug.Log("[MonocleItem] Monocle " + monocleId + " diambil");
+        if (labelTf != null) Destroy(labelTf.gameObject);
+
+        onPickedUp.Invoke();   // BARU: panggil monolog sebelum objek dimatikan
+
+        gameObject.SetActive(false);
+    }
+
+    static bool IsPlayer(Transform t)
+    {
+        for (; t != null; t = t.parent)
+            if (t.CompareTag("Player")) return true;
+        return false;
     }
 }

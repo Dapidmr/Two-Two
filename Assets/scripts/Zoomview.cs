@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;   // BARU
+using UnityEngine.UI;
 using TMPro;
 
 // Sistem umum: tekan E dekat objek -> kamera zoom ke ZoomPoint.
@@ -12,6 +12,8 @@ using TMPro;
 // Taruh script ini di objek yang punya Collider (Is Trigger) sebagai area deteksi.
 //
 // FocusOn() / Unfocus() untuk zoom level 2 (dipakai PandoraController), hanya di mode Camera To Point.
+//
+// Tulisan petunjuk ("Press E ..." dan "Press Esc to back") digambar lewat HintUI.cs.
 public class ZoomView : MonoBehaviour
 {
     public enum DisplayMode { CameraToPoint, PickUp }
@@ -20,13 +22,19 @@ public class ZoomView : MonoBehaviour
     public DisplayMode displayMode = DisplayMode.CameraToPoint;
 
     [Header("UI")]
-    public TextMeshProUGUI promptText;
+    public TextMeshProUGUI promptText;   // tidak dipakai lagi (diganti tulisan lewat kode), boleh dikosongkan
     public float heightOffset = 1.5f;
 
     [Header("Kamera")]
     public Transform zoomPoint;
     public float cameraSpeed = 5f;
     public float zoomFieldOfView = 0f;
+
+    [Header("Petunjuk (kode, tanpa PromptText)")]
+    public string promptMessage = "Press E to Open";
+    public string backMessage = "Press Esc to back";   // tampil di tengah bawah layar saat zoom (mode Camera To Point)
+    public bool requireAim = true;        // tulisan & E hanya aktif kalau crosshair mengarah ke benda
+    public float aimPadding = 0.1f;       // area bidik diperbesar sedikit
 
     [Header("First person")]
     public bool requireFacing = true;
@@ -67,10 +75,13 @@ public class ZoomView : MonoBehaviour
 
     [Header("Keluar dari zoom")]
     public bool allowExit = true;
+    public bool exitWithE = false;   // false = keluar zoom hanya dengan Esc, true = E juga bisa (perilaku lama)
 
     [Header("Event")]
     public UnityEvent onEnter;
     public UnityEvent onExit;
+    public UnityEvent onBlockedExit;   // nyala setiap Esc ditekan saat zoom tapi allowExit masih false
+    public UnityEvent onBookOpened;    // BARU: Pick Up dengan clip -> nyala setelah buku selesai terbuka (E kedua)
 
     // ===== Pick Up: tampilan =====
     [Header("Pick Up: tampilan")]
@@ -78,7 +89,7 @@ public class ZoomView : MonoBehaviour
     public float inspectRadius = 0.2f;       // ukuran benda saat diangkat (radius, world unit)
     public float inspectMoveSpeed = 8f;
     public float rotateSpeed = 0.4f;         // derajat per pixel drag
-    public float liftUp = 0.05f;             // BARU: geser benda ke atas layar saat diangkat
+    public float liftUp = 0.05f;             // geser benda ke atas layar saat diangkat
     public bool faceCameraOnInspect = true;
     public Vector3 faceLocalAxis = Vector3.up;     // sumbu lokal benda yang menghadap kamera
     public Vector3 faceLocalUp = Vector3.right;    // sumbu lokal benda yang naik di layar
@@ -130,6 +141,7 @@ public class ZoomView : MonoBehaviour
     private bool returning = false;
     private bool resetting = false;
     private bool promptOwned = false;
+    private bool showPrompt = false;
     private readonly HashSet<Collider> bodyBlockerSet = new HashSet<Collider>();
 
     private Transform cam;
@@ -178,7 +190,7 @@ public class ZoomView : MonoBehaviour
     private bool settlingRot = false;
     private bool readShown = false;
 
-    // UBAH: latar gelap pakai Image di Canvas full-screen
+    // latar gelap pakai Image di Canvas full-screen
     private Image dimImage;
     private float dimAlpha = 0f, dimTarget = 0f;
 
@@ -189,6 +201,7 @@ public class ZoomView : MonoBehaviour
 
     void OnDisable()
     {
+        showPrompt = false;
         instances.Remove(this);
 
         if (promptOwned && promptText != null) promptText.gameObject.SetActive(false);
@@ -201,7 +214,6 @@ public class ZoomView : MonoBehaviour
         }
     }
 
-    // UBAH
     void OnDestroy()
     {
         if (dimImage != null) Destroy(dimImage.canvas.gameObject);
@@ -252,6 +264,25 @@ public class ZoomView : MonoBehaviour
         return Vector3.Angle(cam.forward, to);
     }
 
+    // true kalau crosshair (atau kursor) mengarah ke benda ini
+    bool IsAimedAt()
+    {
+        if (rotateTarget == null || camComp == null || Mouse.current == null) return true;
+
+        var rends = rotateTarget.GetComponentsInChildren<Renderer>();
+        if (rends.Length == 0) return true;
+
+        Bounds b = rends[0].bounds;
+        foreach (var r in rends) b.Encapsulate(r.bounds);
+        b.Expand(aimPadding * 2f);
+
+        Vector2 sp = Cursor.lockState == CursorLockMode.Locked
+            ? new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)
+            : Mouse.current.position.ReadValue();
+
+        return b.IntersectRay(camComp.ScreenPointToRay(sp), out float d);
+    }
+
     static ZoomView ComputeBest()
     {
         foreach (ZoomView z in instances)
@@ -265,6 +296,7 @@ public class ZoomView : MonoBehaviour
 
             float a = z.AngleToCamera();
             if (z.requireFacing && a > z.facingAngle) continue;
+            if (z.requireAim && !z.IsAimedAt()) continue;
 
             if (a < bestAngle)
             {
@@ -275,27 +307,11 @@ public class ZoomView : MonoBehaviour
         return best;
     }
 
+    // tidak lagi pakai PromptText, tulisan digambar lewat HintUI
     void UpdatePrompt(bool show)
     {
-        if (promptText == null) return;
-
-        if (show)
-        {
-            Vector3 sp = camComp.WorldToScreenPoint(transform.position + Vector3.up * heightOffset);
-            if (sp.z > 0f)
-            {
-                promptText.gameObject.SetActive(true);
-                promptText.transform.position = sp;
-                promptOwned = true;
-                return;
-            }
-        }
-
-        if (promptOwned)
-        {
-            promptText.gameObject.SetActive(false);
-            promptOwned = false;
-        }
+        showPrompt = show;
+        if (show) HintUI.ShowAim(promptMessage);
     }
 
     void Update()
@@ -320,13 +336,19 @@ public class ZoomView : MonoBehaviour
         {
             if (UpdatePickUp() && allowExit) ExitZoom();
         }
-        else if (isZoomed && focused && (ePressed || escPressed))
+        else if (isZoomed && focused && (escPressed || (exitWithE && ePressed)))
             Unfocus();
-        else if (isZoomed && allowExit && (ePressed || escPressed))
+        else if (isZoomed && allowExit && (escPressed || (exitWithE && ePressed)))
             ExitZoom();
+        // BARU: Esc ditekan tapi keluar masih dikunci -> nyalakan event (untuk monolog "kaget")
+        else if (isZoomed && !allowExit && !IsPickUp && escPressed)
+            onBlockedExit.Invoke();
 
         if (isZoomed)
         {
+            // "Press Esc to back" di tengah bawah layar (mode Pick Up sudah punya teks sendiri)
+            if (!IsPickUp && allowExit) HintUI.ShowBottom(backMessage);
+
             if (IsPickUp)
             {
                 // sudah ditangani UpdatePickUp
@@ -377,7 +399,6 @@ public class ZoomView : MonoBehaviour
         }
     }
 
-    // UBAH
     void LateUpdate()
     {
         if (dimImage == null) return;
@@ -485,7 +506,7 @@ public class ZoomView : MonoBehaviour
         SetOpenedHint(false);
         if (inspectHintText != null) inspectHintText.gameObject.SetActive(true);
 
-        // UBAH: latar gelap = Image full-screen di Canvas
+        // latar gelap = Image full-screen di Canvas
         if (dimImage == null)
         {
             GameObject cgo = new GameObject("ZoomViewDimCanvas");
@@ -598,7 +619,11 @@ public class ZoomView : MonoBehaviour
             if (bookState == 1)
             {
                 phase = Mathf.MoveTowards(phase, 0.5f, step);
-                if (phase >= 0.5f) bookState = 2;
+                if (phase >= 0.5f)
+                {
+                    bookState = 2;
+                    onBookOpened.Invoke();   // BARU
+                }
             }
             else if (bookState == 3)
             {
@@ -629,7 +654,7 @@ public class ZoomView : MonoBehaviour
         }
         else
         {
-            wantExit = e || esc;
+            wantExit = esc || (exitWithE && e);
         }
 
         // Rotasi
@@ -655,7 +680,6 @@ public class ZoomView : MonoBehaviour
         Vector3 scaleT = targetScale * Mathf.Lerp(1f, openScaleMul, o);
         t.localScale = Vector3.Lerp(t.localScale, scaleT, dt * inspectMoveSpeed);
 
-        // UBAH: ditambah liftUp
         Vector3 center = c.position + c.forward * inspectDistance + c.up * (openUp * o + liftUp);
         Vector3 wantCenter = bookState != 0 ? CurrentLocalCenter() : localCenter;
         viewCenter = bookState != 0 ? wantCenter : Vector3.Lerp(viewCenter, wantCenter, dt * inspectMoveSpeed);
@@ -895,6 +919,7 @@ public class ZoomView : MonoBehaviour
         pitch = 0f;
         focused = false;
         focusFov = 0f;
+        showPrompt = false;
 
         origPos = rotateTarget.position;
         origRot = rotateTarget.rotation;

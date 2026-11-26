@@ -470,7 +470,7 @@ public class MonocleLens : MonoBehaviour
             b = r.bounds;
             local = false;
         }
-
+            
         Transform t = r.transform;
         float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
 

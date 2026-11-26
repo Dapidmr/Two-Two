@@ -72,6 +72,24 @@ public class PandoraBlockPanel : PandoraPanel
     [Header("UI (opsional)")]
     public TextMeshProUGUI display;                 // menampilkan "2 / 4" (jumlah balok terpasang)
 
+    [Header("Simbol tersembunyi (butuh monocle)")]
+    [Tooltip("true = simbol merah di balok tidak terlihat sampai pemain punya monocle. Model dan texture asli tidak diubah.")]
+    public bool hideSymbolsUntilMonocle = true;
+    [Tooltip("Monocle mana yang dibutuhkan untuk melihat simbol.")]
+    public MonocleReveal.Requirement monocleNeeded = MonocleReveal.Requirement.Either;
+    [Tooltip("Untuk tes: tampilkan simbol tanpa monocle.")]
+    public bool revealForTest = false;
+    [Tooltip("Opsional: texture TANPA simbol, urut sesuai Blocks. Kosong = simbol dihapus otomatis dari salinan texture.")]
+    public Texture[] hiddenTextures;
+    [Tooltip("Hapus otomatis: piksel dengan merah di atas nilai ini dianggap simbol. Naikkan kalau titik domino ikut hilang, turunkan kalau simbol masih terlihat.")]
+    [Range(0.3f, 1f)] public float symbolMinRed = 0.6f;
+    [Tooltip("Hapus otomatis: seberapa dominan merah dibanding hijau dan biru.")]
+    [Range(0.05f, 0.8f)] public float symbolRedDominance = 0.2f;
+    [Tooltip("Hapus otomatis: melebarkan area hapus (piksel) supaya tepi simbol yang pudar ikut hilang.")]
+    [Range(0, 6)] public int eraseGrow = 2;
+    [Tooltip("Hapus otomatis: bagian texture yang diperiksa (0-1). Default seluruh texture.")]
+    public Rect eraseRegion = new Rect(0f, 0f, 1f, 1f);
+
     private enum Pose { Home, Card, Slot }
 
     private class State
@@ -133,6 +151,15 @@ public class PandoraBlockPanel : PandoraPanel
             if (c == null) c = AddBoxCollider(b.block);
             c.enabled = false;                      // baru aktif saat section ini dibuka
             s.col = c;
+
+            // Simbol disembunyikan sampai pemain punya monocle
+            if (hideSymbolsUntilMonocle)
+            {
+                int idx = states.Count;
+                Texture hid = (hiddenTextures != null && idx < hiddenTextures.Length) ? hiddenTextures[idx] : null;
+                MonocleReveal rev = b.block.gameObject.AddComponent<MonocleReveal>();
+                rev.Setup(monocleNeeded, hid, symbolMinRed, symbolRedDominance, eraseGrow, eraseRegion, revealForTest);
+            }
 
             s.cardFactor = cardScale;
             if (autoSize)

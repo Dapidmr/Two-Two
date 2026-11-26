@@ -15,7 +15,11 @@ public class MejaLaci : MonoBehaviour
     [Header("Zoom (urutan SAMA dengan Drawer Names)")]
     public Transform[] zoomPoints;                  // 1 empty per laci, di atas laci. Kosong = laci buka tanpa zoom
     public float cameraSpeed = 5f;
-    public bool zoomHintOnlyWhenAimed = true;   // false = hint tetap di bawah layar
+
+    [Header("Tulisan petunjuk")]
+    public string openText = "Press E to Open";
+    public string closeText = "Press E to Close";
+    public string backText = "Press Esc to back";
 
     class Drawer
     {
@@ -28,14 +32,11 @@ public class MejaLaci : MonoBehaviour
     readonly Dictionary<Transform, Drawer> drawers = new Dictionary<Transform, Drawer>();
     Drawer hovered;
     string hitList;
-    string lastHitName;
-    GUIStyle style, shadow;
 
     // ===== zoom =====
     Drawer zoomedDrawer;
     bool returning;
     bool prevInspecting;
-    bool zoomAimed;
     Transform cam;
     Vector3 camOriginalPos;
     Quaternion camOriginalRot;
@@ -105,20 +106,10 @@ public class MejaLaci : MonoBehaviour
         if (zoomedDrawer != null)
         {
             hovered = null;
-            zoomAimed = false;
-            if (!block && Mouse.current != null && Camera.main != null)
-            {
-                Ray zr = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-                var zh = Physics.RaycastAll(zr, 100f, ~0, QueryTriggerInteraction.Ignore);
-                System.Array.Sort(zh, (a, b) => a.distance.CompareTo(b.distance));
-                foreach (var hit in zh)
-                {
-                    if (IsPlayer(hit.transform)) continue;
-                    zoomAimed = hit.transform.IsChildOf(zoomedDrawer.t)
-                                && hit.collider.GetComponentInParent<BookCabin>() == null;
-                    break;
-                }
-            }
+
+            // tulisan "Press Esc to back" di tengah bawah layar (hilang saat buku sedang di-inspect)
+            if (!anyInsp) HintUI.ShowBottom(backText);
+
             if (!block && kb != null && kb.escapeKey.wasPressedThisFrame)
                 ExitZoom();
 
@@ -167,8 +158,6 @@ public class MejaLaci : MonoBehaviour
                 if (IsPlayer(hit.transform)) continue; // lewati badan player
                 if (hit.collider.GetComponentInParent<BookCabin>() != null) continue; // collider buku tidak mewakili laci
 
-                lastHitName = hit.collider.name;
-
                 // naik ke parent sampai ketemu laci
                 for (var t = hit.transform; t != null; t = t.parent)
                     if (drawers.TryGetValue(t, out var d)) { hovered = d; break; }
@@ -176,6 +165,9 @@ public class MejaLaci : MonoBehaviour
                 break; // benda pertama selain player dan buku yang kena
             }
         }
+
+        if (hovered != null)
+            HintUI.ShowAim(hovered.isOpen ? closeText : openText);
 
         if (hovered != null && kb != null && kb.eKey.wasPressedThisFrame)
         {
@@ -250,50 +242,6 @@ public class MejaLaci : MonoBehaviour
         for (; t != null; t = t.parent)
             if (t.CompareTag("Player")) return true;
         return false;
-    }
-
-    void OnGUI()
-    {
-        if (style == null)
-        {
-            style = new GUIStyle(GUI.skin.label) { fontSize = 22, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
-            style.normal.textColor = Color.white;
-            shadow = new GUIStyle(style);
-            shadow.normal.textColor = Color.black;
-        }
-
-        // Saat zoom: teks tetap di bawah layar, hilang saat buku sedang di-inspect
-        if (zoomedDrawer != null)
-        {
-            if (BookCabin.AnyInspecting) return;
-            if (zoomHintOnlyWhenAimed)
-            {
-                if (!zoomAimed || Mouse.current == null) return;
-                Vector2 m = Mouse.current.position.ReadValue();
-                DrawLabel("Esc to close", new Rect(m.x - 100, Screen.height - m.y + 25, 200, 40));
-            }
-            else
-            {
-                DrawLabel("Esc to close", new Rect(Screen.width * 0.5f - 100, Screen.height - 80, 200, 40));
-            }
-            return;
-        }
-
-        if (hovered == null || Mouse.current == null) return;
-
-        string text = hovered.isOpen ? "E to close" : "E to open";
-
-        Vector2 p = Cursor.lockState == CursorLockMode.Locked
-            ? new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)
-            : new Vector2(Mouse.current.position.ReadValue().x, Screen.height - Mouse.current.position.ReadValue().y);
-
-        DrawLabel(text, new Rect(p.x - 100, p.y + 25, 200, 40));
-    }
-
-    void DrawLabel(string text, Rect rect)
-    {
-        GUI.Label(new Rect(rect.x + 1, rect.y + 1, rect.width, rect.height), text, shadow);
-        GUI.Label(rect, text, style);
     }
 
     static Transform FindDeep(Transform parent, string name)

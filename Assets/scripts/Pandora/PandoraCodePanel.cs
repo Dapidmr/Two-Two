@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 // Section 1: tekan semua tombol dalam urutan yang benar.
-// Tombol yang ditekan tetap masuk.
-// Salah -> merah, lalu semua tombol naik lagi.
-// Benar -> hijau, semua tetap masuk, kamera kembali ke zoom utama dan section ini terkunci.
+// - Tombol yang ditekan tetap masuk dan diberi TANDA (titik berwarna) supaya jelas terlihat.
+// - Setelah semua tombol ditekan baru dicek, ditampilkan lewat lingkaran indikator:
+//     MERAH = salah (lalu semua tombol naik lagi), HIJAU = benar (kembali ke zoom utama, section terkunci).
+// Tombol dengan label yang sama dianggap sama (misal 3 tombol berlabel "I").
 public class PandoraCodePanel : PandoraPanel
 {
     [System.Serializable]
@@ -26,13 +26,26 @@ public class PandoraCodePanel : PandoraPanel
     [Header("Kode")]
     public string[] correctSequence = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
 
-    [Header("UI")]
-    public TextMeshProUGUI display;
-    public Color normalColor = Color.white;
-    public Color correctColor = Color.green;
-    public Color wrongColor = Color.red;
-    public float wrongResetDelay = 1f;
+    [Header("Indikator lingkaran")]
+    [Tooltip("Posisi di layar (0-1). Default: tengah atas.")]
+    public Vector2 indicatorPosition = new Vector2(0.5f, 0.9f);
+    public float indicatorSize = 90f;
+    public Color waitColor = new Color(1f, 1f, 1f, 0.35f);
+    public Color correctColor = new Color(0.2f, 1f, 0.3f, 1f);
+    public Color wrongColor = new Color(1f, 0.15f, 0.15f, 1f);
+    public Color rimColor = new Color(0f, 0f, 0f, 0.6f);
+    public float wrongResetDelay = 1f;      // lama merah sebelum tombol naik lagi
     public float returnDelay = 1.2f;        // jeda sebelum kembali ke zoom utama setelah benar
+
+    [Header("Tanda tombol ditekan")]
+    public bool showPressMarker = true;
+    public Color markerColor = new Color(1f, 0.85f, 0.2f, 1f);
+    [Tooltip("Ukuran titik, sebagai bagian dari sisi terkecil tombol.")]
+    [Range(0.1f, 0.8f)] public float markerSize = 0.3f;
+    [Tooltip("Letak titik di tombol: X kanan, Y atas, dari tengah (1 = tepi tombol).")]
+    public Vector2 markerCorner = new Vector2(0.6f, 0.6f);
+    [Tooltip("Jarak titik di depan permukaan tombol (satuan dunia).")]
+    public float markerLift = 0.003f;
 
     [Header("Efek tekan keycap")]
     [Tooltip("Arah tekan = arah pandang titik ini. Kosongkan = pakai Focus Point.")]
@@ -44,7 +57,10 @@ public class PandoraCodePanel : PandoraPanel
 
     private readonly List<Collider> keyColliders = new List<Collider>();
     private readonly List<KeycapButton> buttons = new List<KeycapButton>();
+    private readonly List<SpriteRenderer> markers = new List<SpriteRenderer>();
     private readonly List<string> entered = new List<string>();
+    private PandoraIndicator ind;
+    private Color markerCurrent;
     private bool locked = false;
 
     Vector3 PressWorldDirection()
@@ -56,6 +72,7 @@ public class PandoraCodePanel : PandoraPanel
 
     void Awake()
     {
+        markerCurrent = markerColor;
         Vector3 dir = PressWorldDirection();
 
         foreach (KeyEntry e in GetEntries())
@@ -71,18 +88,43 @@ public class PandoraCodePanel : PandoraPanel
             b.Setup(c, dir, pressFraction, pressSpeed, true, false);   // tetap masuk, tidak bisa ditekan dua kali
             buttons.Add(b);
 
+            markers.Add(CreateMarker(t));
+
             string captured = e.label;
             b.onPressed.AddListener(() => Press(captured));
         }
+    }
 
-        if (display != null) display.gameObject.SetActive(false);
+    void OnDestroy()
+    {
+        if (ind != null) ind.Destroy();
+    }
+
+    void Update()
+    {
+        if (ind != null) ind.Tick();
+
+        // Titik penanda hanya tampil di tombol yang sedang masuk
+        for (int i = 0; i < markers.Count; i++)
+        {
+            SpriteRenderer m = markers[i];
+            if (m == null) continue;
+
+            bool on = showPressMarker && buttons[i].IsPressed;
+            if (m.gameObject.activeSelf != on) m.gameObject.SetActive(on);
+            if (on) m.color = markerCurrent;
+        }
     }
 
     public override void OnFocus()
     {
         foreach (Collider c in keyColliders) c.enabled = !solved;
-        if (display != null) display.gameObject.SetActive(true);
-        Refresh(solved ? correctColor : normalColor);
+
+        if (ind == null) ind = new PandoraIndicator();
+        if (!ind.IsBuilt) ind.Build("CodeIndicatorCanvas", indicatorPosition, indicatorSize, waitColor, rimColor);
+        ind.Show(true);
+        ind.Set(solved ? correctColor : waitColor, false, true);
+        markerCurrent = solved ? correctColor : markerColor;
     }
 
     public override void OnUnfocus()
@@ -96,9 +138,10 @@ public class PandoraCodePanel : PandoraPanel
         {
             entered.Clear();
             ReleaseAll();
+            markerCurrent = markerColor;
         }
 
-        if (display != null) display.gameObject.SetActive(false);
+        if (ind != null) ind.Show(false);
     }
 
     void Press(string label)
@@ -106,8 +149,6 @@ public class PandoraCodePanel : PandoraPanel
         if (solved || locked) return;
 
         entered.Add(label);
-        Refresh(normalColor);
-
         if (entered.Count >= correctSequence.Length) Check();
     }
 
@@ -119,16 +160,22 @@ public class PandoraCodePanel : PandoraPanel
 
         if (ok)
         {
-            Refresh(correctColor);
+            ShowResult(correctColor);
             foreach (Collider c in keyColliders) c.enabled = false;
             SetSolved();
             StartCoroutine(ReturnAfterDelay());
         }
         else
         {
-            Refresh(wrongColor);
+            ShowResult(wrongColor);
             StartCoroutine(ResetAfterDelay());
         }
+    }
+
+    void ShowResult(Color c)
+    {
+        markerCurrent = c;
+        if (ind != null) ind.Set(c, true);
     }
 
     IEnumerator ReturnAfterDelay()
@@ -148,7 +195,9 @@ public class PandoraCodePanel : PandoraPanel
         ReleaseAll();                       // semua tombol naik lagi
         SetButtonsInteractable(true);
         locked = false;
-        Refresh(normalColor);
+
+        markerCurrent = markerColor;
+        if (ind != null) ind.Set(waitColor, false);
     }
 
     void ReleaseAll()
@@ -161,12 +210,57 @@ public class PandoraCodePanel : PandoraPanel
         foreach (KeycapButton b in buttons) b.interactable = value;
     }
 
-    void Refresh(Color color)
+    // ---------- Tanda di tombol ----------
+
+    // Titik berwarna kecil di sudut permukaan tombol, ikut bergerak masuk bersama tombol
+    SpriteRenderer CreateMarker(Transform key)
     {
-        if (display == null) return;
-        display.text = string.Join(" ", entered);
-        display.color = color;
+        Renderer r = key.GetComponentInChildren<Renderer>();
+        if (r == null) return null;
+
+        Transform rf = directionReference != null ? directionReference : focusPoint;
+        Vector3 viewDir = rf != null ? rf.forward : PressWorldDirection().normalized;
+        Vector3 right = rf != null ? rf.right : Vector3.Cross(Vector3.up, viewDir).normalized;
+        Vector3 up = rf != null ? rf.up : Vector3.Cross(viewDir, right).normalized;
+
+        Vector3 e = r.bounds.extents;
+        float halfW = Proj(right, e);
+        float halfH = Proj(up, e);
+        float halfD = Proj(viewDir, e);
+
+        GameObject go = new GameObject("PressMarker");
+        go.transform.SetParent(key, true);
+        go.transform.position = r.bounds.center
+                                - viewDir * (halfD + markerLift)
+                                + right * (halfW * markerCorner.x)
+                                + up * (halfH * markerCorner.y);
+        go.transform.rotation = Quaternion.LookRotation(viewDir, up);
+
+        // Ukuran dunia: diameter = sisi terkecil tombol x markerSize (sprite 128 px pada 100 px per unit = 1,28 unit)
+        float diameter = Mathf.Min(halfW, halfH) * 2f * markerSize;
+        float s = diameter / 1.28f;
+        go.transform.localScale = Vector3.one;
+        Vector3 ls = go.transform.lossyScale;
+        go.transform.localScale = new Vector3(
+            s / Mathf.Max(Mathf.Abs(ls.x), 0.00001f),
+            s / Mathf.Max(Mathf.Abs(ls.y), 0.00001f),
+            s / Mathf.Max(Mathf.Abs(ls.z), 0.00001f));
+
+        SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = PandoraIndicator.GetCircle();
+        sr.color = markerColor;
+        sr.sortingOrder = 10;
+
+        go.SetActive(false);
+        return sr;
     }
+
+    float Proj(Vector3 axis, Vector3 e)
+    {
+        return Mathf.Abs(axis.x) * e.x + Mathf.Abs(axis.y) * e.y + Mathf.Abs(axis.z) * e.z;
+    }
+
+    // ---------- Daftar tombol ----------
 
     List<KeyEntry> GetEntries()
     {
@@ -230,7 +324,7 @@ public class PandoraCodePanel : PandoraPanel
         return box;
     }
 
-    // Scene view: angka tiap keycap (cyan) dan garis kuning = arah tombol masuk
+    // Scene view: label tiap keycap (cyan) dan garis kuning = arah tombol masuk
     void OnDrawGizmosSelected()
     {
 #if UNITY_EDITOR
