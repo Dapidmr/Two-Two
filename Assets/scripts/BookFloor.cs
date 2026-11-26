@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
 
 // Buku yang tergeletak di lantai (tanpa parent, tanpa rak atau laci).
 // Arahkan crosshair ke buku -> "E to inspect" -> langsung di-inspect.
@@ -32,6 +33,11 @@ public class BookFloor : MonoBehaviour
     public Vector3 faceLocalAxis = Vector3.up;     // sumbu lokal buku yang menghadap kamera (rebah: 0,1,0)
     public Vector3 faceLocalUp = Vector3.right;    // sumbu lokal buku (arah spine) yang diarahkan ke atas layar
     public bool faceCameraOnInspect = true;        // buku di lantai biasanya rebah, jadi default nyala
+
+    [Header("Event")]
+    public UnityEvent onInspectStart;   // dipanggil saat buku mulai di-inspect
+    public UnityEvent onFirstClosed;    // dipanggil sekali, saat buku selesai dibaca lalu ditutup
+    private bool firstClosedFired;
 
     [Header("Buka Buku (E to read)")]
     public bool canOpen = false;
@@ -335,6 +341,7 @@ public class BookFloor : MonoBehaviour
 
         SetAboveDim(true);
         if (bookshelf != null) bookshelf.BeginInspect(inspectDistance, inspectRadius, true);
+        onInspectStart.Invoke();
     }
 
     void UpdateInspect()
@@ -392,6 +399,11 @@ public class BookFloor : MonoBehaviour
 
                     prevPhase = phase;
                     PlayCloseMonolog();
+                    if (!firstClosedFired)
+                    {
+                        firstClosedFired = true;
+                        onFirstClosed.Invoke();
+                    }
                 }
             }
 
