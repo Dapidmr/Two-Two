@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using TMPro;
 
 // Puzzle radio. Pasang di GameObject "Radio" (parent dari Keycaps, Tutupan, Up button, dst).
 // Alur: dekati + E -> kamera zoom -> drag untuk memutar radio -> klik keycaps (PIN) -> klik Up button (power).
-// Memakai Monolog.Instance (script Monolog.cs milikmu) untuk semua teks monolog.
-public class RadioPuzzle : MonoBehaviour
+// Setelah PIN benar, pemain TIDAK bisa keluar zoom; harus menekan power.
+public class Player2Radio : MonoBehaviour
 {
     public enum State { Idle, Entering, Zoomed, Exiting, Ending }
 
@@ -32,6 +34,9 @@ public class RadioPuzzle : MonoBehaviour
     [Tooltip("Child kosong di ruang kosong radio untuk menaruh teks PIN. Sumbu BIRU (Z) harus menunjuk MASUK ke radio (menjauhi pemain).")]
     public Transform pinAnchor;
     public AudioSource radioAudio;                    // sound radio yang sedang berbunyi
+
+    [Header("Aktivasi")]
+    public bool startActive = false;                  // false = radio mati sampai ActivateRadio() dipanggil
 
     [Header("Interaksi")]
     public float interactDistance = 2.5f;
@@ -61,7 +66,7 @@ public class RadioPuzzle : MonoBehaviour
     public float coverTime = 0.5f;
 
     [Header("Tampilan PIN")]
-    public Font pinFont;                              // kosong = font bawaan Unity
+    public TMP_FontAsset pinFont;                     // kosong = font bawaan TMP
     public float pinWidth = 0.08f;                    // lebar teks PIN di dunia (meter)
     public Color displayColor = new Color(0.6f, 1f, 0.6f);
     public string wrongText = "SALAH!";
@@ -75,7 +80,7 @@ public class RadioPuzzle : MonoBehaviour
     [TextArea(2, 4)] public string[] endingLines;         // power ditekan setelah PIN benar
 
     [Header("Sound")]
-    public AudioClip unlockedClip;                    // sound radio setelah PIN benar
+    public AudioClip unlockedClip;                    // sound radio setelah PIN benar (tetap main sampai ending)
     public AudioClip keyClip;
     public AudioClip wrongClip;
     public AudioClip powerClip;
@@ -84,10 +89,11 @@ public class RadioPuzzle : MonoBehaviour
     public float fadeTime = 2f;
     public string endText = "Chapter ended for now, thx for experiencing the development!";
     public int endFontSize = 32;
-
-    [Header("Aktivasi")]
-    public bool startActive = false;   // false = radio mati sampai ActivateRadio() dipanggil
-    bool active;
+    public float nextButtonDelay = 5f;                // jeda setelah teks akhir muncul penuh
+    public string nextButtonText = "Next";
+    public string nextSceneName = "Home";
+    public float dotSize = 8f;
+    public Color dotColor = Color.white;
 
     State state = State.Idle;
     Camera cam;
@@ -95,6 +101,9 @@ public class RadioPuzzle : MonoBehaviour
     Vector3 camLocalPos; Quaternion camLocalRot;
     Vector3 radioPos0; Quaternion radioRot0;
     Vector3 localCenter;
+    Rigidbody playerRb;
+    bool playerRbWasKinematic;
+    Vector3 zoomPos; Quaternion zoomRot;
 
     readonly Dictionary<Transform, KeyEntry> map = new Dictionary<Transform, KeyEntry>();
     KeyEntry powerEntry;
@@ -104,12 +113,13 @@ public class RadioPuzzle : MonoBehaviour
     string entered = "";
     string flash;
     Color flashColor;
-    bool unlocked, busy, dragging, introPlayed, looking;
+    bool unlocked, busy, dragging, introPlayed, looking, checking;
+    bool active, showNext;
 
-    TextMesh pinText;
+    TextMeshPro pinText;
     AudioSource sfx;
     float fadeAlpha, textAlpha;
-    GUIStyle promptStyle, endStyle;
+    GUIStyle promptStyle, endStyle, nextStyle;
 
     // ---------- setup ----------
 
@@ -118,6 +128,7 @@ public class RadioPuzzle : MonoBehaviour
     void Start()
     {
         active = startActive;
+        if (pinText != null) pinText.enabled = active;
         if (radioAudio != null)
         {
             radioAudio.playOnAwake = false;
@@ -126,11 +137,12 @@ public class RadioPuzzle : MonoBehaviour
         }
     }
 
-    // Hubungkan ke BookItem.onCollected di Inspector
+    // Hubungkan ke event BookFloor (onFirstClosed / onInspectStart) di Inspector
     public void ActivateRadio()
     {
         if (active) return;
         active = true;
+        if (pinText != null) pinText.enabled = true;
         if (radioAudio != null && !unlocked)
         {
             radioAudio.loop = true;
@@ -202,52 +214,61 @@ public class RadioPuzzle : MonoBehaviour
         UpdateDisplay();
     }
 
+    // Pastikan tombol punya collider. Kalau tombol hanya empty parent, collider dibuat dari bounds anak-anaknya.
     static void EnsureCollider(Transform t)
     {
-        if (t.GetComponent<Collider>() == null && t.GetComponent<MeshFilter>() != null)
+        if (t.GetComponentInChildren<Collider>(true) != null) return;
+
+        if (t.GetComponent<MeshFilter>() != null)
+        {
             t.gameObject.AddComponent<BoxCollider>();   // otomatis pas ke mesh
+            return;
+        }
+
+        var rs = t.GetComponentsInChildren<Renderer>();
+        if (rs.Length == 0) return;
+        Bounds b = rs[0].bounds;
+        foreach (var r in rs) b.Encapsulate(r.bounds);
+
+        var bc = t.gameObject.AddComponent<BoxCollider>();
+        Vector3 s = t.lossyScale;
+        bc.center = t.InverseTransformPoint(b.center);
+        bc.size = new Vector3(
+            b.size.x / Mathf.Max(1e-5f, Mathf.Abs(s.x)),
+            b.size.y / Mathf.Max(1e-5f, Mathf.Abs(s.y)),
+            b.size.z / Mathf.Max(1e-5f, Mathf.Abs(s.z)));
     }
 
     void CreatePinText()
     {
         if (pinAnchor == null)
-            Debug.LogWarning("RadioPuzzle: pinAnchor belum diisi, teks PIN ditaruh di tengah radio.");
+            Debug.LogWarning("Player2Radio: pinAnchor belum diisi, teks PIN ditaruh di tengah radio.");
 
         var go = new GameObject("PinText");
         go.transform.SetParent(pinAnchor != null ? pinAnchor : transform, false);
-        pinText = go.AddComponent<TextMesh>();
-        pinText.anchor = TextAnchor.MiddleCenter;
-        pinText.alignment = TextAlignment.Center;
-        pinText.fontSize = 64;
-        pinText.characterSize = 0.1f;
 
-        Font f = pinFont;
-        if (f == null)
-        {
-            try { f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); }
-            catch { f = Resources.GetBuiltinResource<Font>("Arial.ttf"); }
-        }
-        pinText.font = f;
-        go.GetComponent<MeshRenderer>().sharedMaterial = f.material;
-        StartCoroutine(FitPinText());
+        pinText = go.AddComponent<TextMeshPro>();
+        if (pinFont != null) pinText.font = pinFont;
+        pinText.fontSize = 4f;
+        pinText.alignment = TextAlignmentOptions.Center;
+        pinText.textWrappingMode = TextWrappingModes.NoWrap;
+        pinText.rectTransform.sizeDelta = new Vector2(20f, 5f);
+
+        FitPinText();
     }
 
-    // sesuaikan ukuran teks supaya lebarnya = pinWidth (dalam meter, apa pun scale import modelnya)
-    IEnumerator FitPinText()
+    // sesuaikan ukuran teks supaya lebarnya = pinWidth (meter, apa pun scale import modelnya)
+    void FitPinText()
     {
-        yield return null;
-        var mr = pinText.GetComponent<MeshRenderer>();
         pinText.transform.localScale = Vector3.one;
         string keep = pinText.text;
         pinText.text = "0 0 0 0 0 0";
-        yield return null;
-        float w = mr.bounds.size.magnitude;   // aman terhadap rotasi anchor
+        pinText.ForceMeshUpdate();
+        float w = pinText.textBounds.size.x * Mathf.Abs(pinText.transform.lossyScale.x);
         pinText.text = keep;
         if (w > 0.0001f)
-        {
-            // lebar teks sampel ~ 6 angka + spasi; magnitude ~ lebar karena tinggi kecil
             pinText.transform.localScale = Vector3.one * (pinWidth / w);
-        }
+        pinText.enabled = active;
     }
 
     // ---------- loop ----------
@@ -264,7 +285,9 @@ public class RadioPuzzle : MonoBehaviour
         }
         else if (state == State.Zoomed)
         {
-            if (kb != null && (kb.qKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame))
+            // Setelah PIN benar, tidak boleh keluar: pemain harus menekan power
+            bool canExit = !unlocked && !checking;
+            if (canExit && kb != null && (kb.qKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame))
             {
                 StartCoroutine(Exit());
                 return;
@@ -276,7 +299,6 @@ public class RadioPuzzle : MonoBehaviour
     bool CanInteract()
     {
         if (!active || cam == null) return false;
-        if (cam == null) return false;
         Vector3 to = WorldCenter() - cam.transform.position;
         float d = to.magnitude;
         if (d > interactDistance || d < 0.001f) return false;
@@ -287,6 +309,9 @@ public class RadioPuzzle : MonoBehaviour
 
     void HandleMouse(Mouse mouse)
     {
+        // kursor sedang di panel hint: jangan klik/drag radio
+        if (HintOverlay.PointerOver) { dragging = false; return; }
+
         if (mouse.leftButton.wasPressedThisFrame)
         {
             dragging = false;
@@ -305,17 +330,37 @@ public class RadioPuzzle : MonoBehaviour
         }
     }
 
+    // Ambil tombol terdekat yang kena ray. Collider lain milik radio (bodi, bingkai) dilewati,
+    // tapi benda di luar radio tetap menghalangi. Tombol di sisi belakang radio ditolak.
     bool TryPick(Vector2 screenPos, out KeyEntry entry)
     {
         entry = null;
         Ray ray = cam.ScreenPointToRay(screenPos);
-        if (!Physics.Raycast(ray, out RaycastHit hit, 20f, ~0, QueryTriggerInteraction.Ignore)) return false;
+        var hits = Physics.RaycastAll(ray, 20f, ~0, QueryTriggerInteraction.Ignore);
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-        Transform t = hit.collider.transform;
-        while (t != null && t != transform.parent)
+        foreach (var h in hits)
         {
-            if (map.TryGetValue(t, out entry)) return true;
-            t = t.parent;
+            Transform ht = h.collider.transform;
+            if (playerRb != null && ht.IsChildOf(playerRb.transform)) continue;
+
+            Transform t = ht;
+            while (t != null && t != transform.parent)
+            {
+                if (map.TryGetValue(t, out entry))
+                {
+                    Vector3 outward = transform.TransformDirection(
+                        entry == powerEntry ? -powerPressDirection : -keyPressDirection).normalized;
+                    if (Vector3.Dot(outward, -ray.direction) > 0.05f) return true;
+                    entry = null;
+                    return false;   // sisi belakang
+                }
+                t = t.parent;
+            }
+
+            if (ht.IsChildOf(transform)) continue;   // bagian radio yang bukan tombol: lewati
+            entry = null;
+            return false;                             // benda lain menghalangi
         }
         entry = null;
         return false;
@@ -331,7 +376,7 @@ public class RadioPuzzle : MonoBehaviour
         if (e == powerEntry) { PressPower(); return; }
 
         Play(keyClip);
-        if (unlocked || flash != null) return;
+        if (unlocked || checking || flash != null) return;
 
         string v = e.value == null ? "" : e.value.Trim();
         if (v == "C" || v == "c")
@@ -350,6 +395,7 @@ public class RadioPuzzle : MonoBehaviour
 
     IEnumerator CheckPin()
     {
+        checking = true;
         yield return new WaitForSeconds(0.25f);
 
         if (entered == pin)
@@ -376,6 +422,7 @@ public class RadioPuzzle : MonoBehaviour
             entered = "";
             UpdateDisplay();
         }
+        checking = false;
     }
 
     void PressPower()
@@ -395,6 +442,7 @@ public class RadioPuzzle : MonoBehaviour
         busy = true;
         dragging = false;
 
+        // Musik radio sengaja TIDAK di-fade, terus main sampai layar hitam dan tombol Next.
 
         yield return new WaitForSeconds(0.3f);
         Say(endingLines);
@@ -417,9 +465,12 @@ public class RadioPuzzle : MonoBehaviour
             yield return null;
         }
         textAlpha = 1f;
-    }
 
-    
+        yield return new WaitForSeconds(nextButtonDelay);
+        showNext = true;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = false;   // kursor sistem disembunyikan, diganti titik
+    }
 
     // ---------- zoom ----------
 
@@ -434,6 +485,14 @@ public class RadioPuzzle : MonoBehaviour
         radioRot0 = transform.rotation;
 
         foreach (var b in disableWhileZoomed) if (b != null) b.enabled = false;
+        playerRb = cam.GetComponentInParent<Rigidbody>();
+        if (playerRb != null)
+        {
+            playerRbWasKinematic = playerRb.isKinematic;
+            playerRb.linearVelocity = Vector3.zero;
+            playerRb.angularVelocity = Vector3.zero;
+            playerRb.isKinematic = true;
+        }
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
@@ -456,6 +515,8 @@ public class RadioPuzzle : MonoBehaviour
             yield return null;
         }
         camT.SetPositionAndRotation(toPos, toRot);
+        zoomPos = toPos;
+        zoomRot = toRot;
 
         state = State.Zoomed;
         coverTarget = 1f;
@@ -487,6 +548,7 @@ public class RadioPuzzle : MonoBehaviour
         foreach (var b in disableWhileZoomed) if (b != null) b.enabled = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        if (playerRb != null) playerRb.isKinematic = playerRbWasKinematic;
         state = State.Idle;
     }
 
@@ -494,6 +556,9 @@ public class RadioPuzzle : MonoBehaviour
 
     void LateUpdate()
     {
+        if (camT != null && (state == State.Zoomed || state == State.Ending))
+            camT.SetPositionAndRotation(zoomPos, zoomRot);
+
         float dt = Time.deltaTime;
 
         Vector3 keyWorld = transform.TransformDirection(keyPressDirection).normalized * keyPressDepth;
@@ -531,7 +596,7 @@ public class RadioPuzzle : MonoBehaviour
     void Say(string[] lines)
     {
         if (lines == null || lines.Length == 0) return;
-        if (Monolog.Instance == null) { Debug.LogWarning("RadioPuzzle: tidak ada Monolog di scene"); return; }
+        if (Monolog.Instance == null) { Debug.LogWarning("Player2Radio: tidak ada Monolog di scene"); return; }
         Monolog.Instance.Play(lines);
     }
 
@@ -569,11 +634,16 @@ public class RadioPuzzle : MonoBehaviour
         if (state == State.Idle && looking)
             DrawCentered("[E] Gunakan radio", Screen.height * 0.62f);
         else if (state == State.Zoomed)
-            DrawCentered("Drag: putar   |   Klik tombol   |   Q / Esc: keluar", 24f);
+        {
+            if (unlocked)
+                DrawCentered("Drag: putar   |   Tekan tombol POWER untuk melanjutkan", 24f);
+            else
+                DrawCentered("Drag: putar   |   Klik tombol   |   Q / Esc: keluar", 24f);
+        }
 
         if (fadeAlpha > 0f)
         {
-            GUI.depth = -800;   // di atas Monolog (-500), di bawah crosshair (-1000)
+            GUI.depth = -800;   // di atas Monolog (-500) dan Hint (-600), di bawah crosshair (-1000)
             GUI.color = new Color(0f, 0f, 0f, fadeAlpha);
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
             GUI.color = Color.white;
@@ -584,6 +654,24 @@ public class RadioPuzzle : MonoBehaviour
                 endStyle.normal.textColor = new Color(1f, 1f, 1f, textAlpha);
                 float w = Screen.width * 0.8f;
                 GUI.Label(new Rect((Screen.width - w) * 0.5f, 0, w, Screen.height), endText, endStyle);
+            }
+
+            if (showNext)
+            {
+                if (nextStyle == null)
+                    nextStyle = new GUIStyle(GUI.skin.button) { fontSize = 24, fontStyle = FontStyle.Bold };
+
+                float bw = 200f, bh = 56f;
+                var r = new Rect((Screen.width - bw) * 0.5f, Screen.height - bh - 60f, bw, bh);
+                if (GUI.Button(r, nextButtonText, nextStyle))
+                    SceneManager.LoadScene(nextSceneName);
+
+                // titik pengganti kursor, digambar paling atas
+                GUI.depth = -1100;
+                Vector2 m = Event.current.mousePosition;
+                GUI.color = dotColor;
+                GUI.DrawTexture(new Rect(m.x - dotSize * 0.5f, m.y - dotSize * 0.5f, dotSize, dotSize), Texture2D.whiteTexture);
+                GUI.color = Color.white;
             }
         }
     }

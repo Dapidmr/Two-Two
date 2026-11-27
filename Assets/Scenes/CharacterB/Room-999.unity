@@ -1171,7 +1171,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc997458a812fc418b5388cc5311ba7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.8738091
+      value: -8.392418
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc997458a812fc418b5388cc5311ba7, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2455,7 +2455,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.067
+      value: -12.296
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 67b13aade8fb9154c9271d3004e19de8, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2590,7 +2590,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 56fc2d70ac76f2140b54592d467a5679, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.9261909
+      value: -11.192417
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 56fc2d70ac76f2140b54592d467a5679, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3038,12 +3038,13 @@ MonoBehaviour:
   zoomPoint: {fileID: 321953376}
   pinAnchor: {fileID: 1966719791}
   radioAudio: {fileID: 566012013}
+  startActive: 0
   interactDistance: 2.5
   lookDotThreshold: 0.9
-  zoomDistance: 0.7
+  zoomDistance: 1
   zoomTime: 0.8
   rotateSpeed: 0.1
-  pin: 162925
+  pin: 92401
   keys:
   - key: {fileID: 1898663601}
     value: 1
@@ -3064,11 +3065,11 @@ MonoBehaviour:
   - key: {fileID: 727167945}
     value: 9
   - key: {fileID: 574821042}
-    value: 10
+    value: '*'
   - key: {fileID: 1616650437}
-    value: 11
+    value: 0
   - key: {fileID: 1069663551}
-    value: 12
+    value: '#'
   powerButton: {fileID: 1864066297}
   keyPressDirection: {x: 0, y: 0, z: 1}
   keyPressDepth: 0.004
@@ -3094,7 +3095,7 @@ MonoBehaviour:
   pinCorrectLines:
   - I heard it! Now, lets turn off this Radio!
   endingLines:
-  - What the fuck...?
+  - What the...?
   unlockedClip: {fileID: 8300000, guid: f1c991044aa188849879512293c9b07b, type: 3}
   keyClip: {fileID: 8300000, guid: 89b117c3e53502a4295cd7fb426a7f17, type: 3}
   wrongClip: {fileID: 8300000, guid: 31e3eca7e02ee6b49bd876a256ead5cd, type: 3}
@@ -3102,7 +3103,11 @@ MonoBehaviour:
   fadeTime: 2
   endText: Chapter ended for now, thx for experiencing the development!
   endFontSize: 32
-  startActive: 0
+  nextButtonDelay: 5
+  nextButtonText: Next
+  nextSceneName: Home
+  dotSize: 8
+  dotColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!65 &293879648
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4655,6 +4660,135 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &438152875
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 438152877}
+  - component: {fileID: 438152876}
+  m_Layer: 0
+  m_Name: BGM
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!82 &438152876
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 438152875}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 570bfc217a9e26040acc28602a16df26, type: 3}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 1
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!4 &438152877
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 438152875}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 23.79174, y: 2.60212, z: 9.27}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &454321983 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 907137157546461803, guid: de71cd2f8f05118418bc141b2367ad97, type: 3}
@@ -5418,7 +5552,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a93fb041221b4ec489ae8e5a556fdc34, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.993
+      value: -11.37
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a93fb041221b4ec489ae8e5a556fdc34, type: 3}
       propertyPath: m_LocalPosition.y
@@ -7616,7 +7750,9 @@ MonoBehaviour:
   - {fileID: 363414476}
   - {fileID: 136057841}
   cameraSpeed: 5
-  zoomHintOnlyWhenAimed: 1
+  openText: Press E to Open
+  closeText: Press E to Close
+  backText: Press Esc to back
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -11559,7 +11695,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c7ab97a0a320f87419b57fa6c50a0be0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.526191
+      value: -9.792418
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c7ab97a0a320f87419b57fa6c50a0be0, type: 3}
       propertyPath: m_LocalPosition.y
@@ -11913,7 +12049,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 03f9af718d36b894faec8831405ef58e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.226191
+      value: -10.492418
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 03f9af718d36b894faec8831405ef58e, type: 3}
       propertyPath: m_LocalPosition.y
@@ -12283,9 +12419,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonologTrigger
   lines:
-  - Apakah TIO GAY?
-  - IDontKnow
-  - TIO GAY
+  - "A radio..\t"
+  - is it still work?
   playOnEnter: 1
   triggerTag: Player
   playOnce: 0
@@ -14969,6 +15104,65 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.901345, y: 4.888666, z: 1.5620263}
   m_Center: {x: -0.01759092, y: 2.4417772, z: 0.016443903}
+--- !u!1 &1676607165
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1676607167}
+  - component: {fileID: 1676607166}
+  m_Layer: 0
+  m_Name: Hint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1676607166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1676607165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a593b6dd202939d4984d852a0348fd37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HintOverlay
+  title: Hint
+  hintText: "There are 3 books on this world, u must find the the right 3 books and
+    gather infomations from it!\nBasic Control:\n \"H to close this window, Esc to
+    exit object inspection, E to interact object\""
+  toggleKey: 22
+  startOpen: 1
+  panelWidth: 320.4
+  padding: 16
+  slideSpeed: 10
+  titleFontSize: 22
+  bodyFontSize: 18
+  panelColor: {r: 0, g: 0, b: 0, a: 0.78}
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  tabWidth: 64
+  tabHeight: 56
+--- !u!4 &1676607167
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1676607165}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 18.21638, y: 4.36182, z: 8.67626}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1704241043
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16221,7 +16415,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: bb22f63816864b64ea6ee8fb49dc4ee5, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.6261911
+      value: -11.892418
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: bb22f63816864b64ea6ee8fb49dc4ee5, type: 3}
       propertyPath: m_LocalPosition.y
@@ -16852,7 +17046,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6f3c91d365d2ef47895fe4f5c824482, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.17380905
+      value: -9.092418
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6f3c91d365d2ef47895fe4f5c824482, type: 3}
       propertyPath: m_LocalPosition.y
@@ -17129,6 +17323,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 438152876}
+        m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
+        m_MethodName: Stop
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   canOpen: 1
   openClips:
   - {fileID: -623603649343465320, guid: c7ab97a0a320f87419b57fa6c50a0be0, type: 3}
@@ -17145,7 +17351,7 @@ MonoBehaviour:
   closeSkip: 0.07
   monologOnClose: 1
   closeLines:
-  - Absolutely, it must be usefull!
+  - Why the radio suddenly on? i must check it!
   closeMonologOnce: 0
 --- !u!1001 &2046223668
 PrefabInstance:
@@ -18096,3 +18302,5 @@ SceneRoots:
   - {fileID: 927161228}
   - {fileID: 1784712579}
   - {fileID: 1704241043}
+  - {fileID: 438152877}
+  - {fileID: 1676607167}
