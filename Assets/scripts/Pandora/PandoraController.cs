@@ -64,6 +64,8 @@ public class PandoraController : MonoBehaviour
     public float homeFadeIn = 1.5f;         // di scene Home: memudar dari hitam
 
     [Header("Tombol Next")]
+    [Tooltip("Jeda (detik) setelah objek Hertz Code selesai muncul, sebelum tombol Next muncul.")]
+    public float nextButtonDelay = 10f;
     public int buttonFontSize = 40;
     public Vector2 buttonSize = new Vector2(320f, 90f);
     public Vector2 buttonMargin = new Vector2(50f, 40f);   // jarak dari pojok kanan bawah
@@ -266,7 +268,9 @@ public class PandoraController : MonoBehaviour
 
         if (holder != null) StartCoroutine(DragRotate(holder));
 
-        // 4. Tombol Next muncul pelan di pojok kanan bawah
+        // 4. Tunggu dulu (pemain bisa memutar objek), lalu tombol Next muncul pelan di pojok kanan bawah
+        if (nextButtonDelay > 0f) yield return new WaitForSeconds(nextButtonDelay);
+
         EnsureEventSystem();
         CanvasGroup buttonGroup = CreateNextButton();
         yield return Fade(buttonGroup, 0f, 1f, buttonFadeIn);

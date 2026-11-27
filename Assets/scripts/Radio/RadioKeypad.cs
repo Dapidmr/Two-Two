@@ -32,16 +32,25 @@ public class RadioKeypad : MonoBehaviour
     [Header("Efek tekan keycap")]
     [Tooltip("Arah tekan = arah pandang titik ini. Kosongkan = pakai Zoom Point dari ZoomView.")]
     public Transform directionReference;
-    public bool flipDirection = false;      // centang kalau tombolnya bergerak ke arah sebaliknya
+    [Tooltip("Centang kalau tombolnya malah maju keluar. Tombol harus bergerak MASUK ke dalam radio.")]
+    public bool flipDirection = true;
     public Vector3 fallbackDirection = Vector3.down;     // sumbu lokal radio, kalau tidak ada referensi
     public float pressFraction = 0.5f;
     public float pressSpeed = 25f;
 
     [Header("Tombol tetap masuk")]
-    [Tooltip("true = angka yang ditekan tetap masuk sampai kode salah / ditekan *, dan terkunci kalau kode benar.")]
-    public bool latchKeys = true;
+    [Tooltip("false = tombol ditekan lalu naik lagi sendiri. true = tombol tetap masuk sampai kode salah / ditekan *.")]
+    public bool latchKeys = false;
     [Tooltip("Tombol dengan simbol ini tidak ikut tertahan (naik lagi setelah ditekan).")]
     public string momentaryKeys = "*#";
+
+    [Header("Suara tombol")]
+    public AudioClip pressSound;            // suara saat tombol ditekan
+    [Range(0f, 1f)] public float pressSoundVolume = 1f;
+    [Tooltip("Variasi nada tiap tekan supaya tidak monoton. 0 = selalu sama.")]
+    [Range(0f, 0.3f)] public float pitchVariation = 0.05f;
+    [Tooltip("Kosongkan = dibuat otomatis di objek ini.")]
+    public AudioSource soundSource;
 
     private readonly List<KeycapButton> buttons = new List<KeycapButton>();
     private bool locked = false;
@@ -66,6 +75,15 @@ public class RadioKeypad : MonoBehaviour
         if (tuner == null) tuner = GetComponent<RadioTuner>();
         if (zoomView == null) zoomView = GetComponent<ZoomView>();
 
+        // Siapkan AudioSource untuk suara tombol
+        if (soundSource == null)
+        {
+            soundSource = gameObject.AddComponent<AudioSource>();
+            soundSource.playOnAwake = false;
+            soundSource.loop = false;
+            soundSource.spatialBlend = 0f;   // 2D, selalu terdengar jelas
+        }
+
         Vector3 dir = PressWorldDirection();
 
         List<KeyEntry> entries = GetEntries();
@@ -81,7 +99,7 @@ public class RadioKeypad : MonoBehaviour
             c.enabled = false;
             newColliders.Add(c);
 
-            // Angka ikut tertahan; * dan # (atau tombol tanpa angka) naik lagi
+            // Angka ikut tertahan kalau latchKeys aktif; * dan # (atau tombol tanpa angka) selalu naik lagi
             bool isMomentary = string.IsNullOrEmpty(e.key) || momentaryKeys.Contains(e.key);
             bool latch = latchKeys && !isMomentary;
 
@@ -89,6 +107,9 @@ public class RadioKeypad : MonoBehaviour
             KeycapButton b = t.gameObject.AddComponent<KeycapButton>();
             b.Setup(c, dir, pressFraction, pressSpeed, latch, true);   // true = angka kembar (misal 34511) boleh ditekan lagi
             buttons.Add(b);
+
+            // Suara untuk SEMUA tombol (termasuk * dan #)
+            b.onPressed.AddListener(PlayPressSound);
 
             string captured = e.key;
             if (!string.IsNullOrEmpty(captured))
@@ -115,6 +136,13 @@ public class RadioKeypad : MonoBehaviour
         {
             SetInteractable(!locked);
         }
+    }
+
+    void PlayPressSound()
+    {
+        if (pressSound == null || soundSource == null) return;
+        soundSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+        soundSource.PlayOneShot(pressSound, pressSoundVolume);
     }
 
     void HandleCoverOpened()

@@ -46,6 +46,12 @@ public class PandoraBlockPanel : PandoraPanel
     [Tooltip("Putaran tambahan balok saat sudah di lubang (derajat, relatif terhadap Slot). Pakai kalau balok di lubang menghadap terbalik.")]
     public Vector3 slotRotationOffset = Vector3.zero;
 
+    [Header("Urutan kartu")]
+    [Tooltip("true = urutan 4 kartu di depan pemain diacak setiap kali section dibuka. Lubang tujuan tiap balok tidak berubah.")]
+    public bool shuffleCards = true;
+    [Tooltip("Dipakai kalau Shuffle Cards mati: posisi kartu dari kiri (0) ke kanan. Isi satu angka per balok, urut sesuai Blocks. Contoh Size 4: 2, 0, 3, 1 berarti balok pertama di posisi ke-3, balok kedua di posisi pertama, dan seterusnya. Kosong = urut seperti di Blocks.")]
+    public int[] cardOrder;
+
     [Header("Gerak")]
     public float flySpeed = 7f;
     public float cameraDelay = 0.35f;               // tunggu kamera zoom dulu sebelum balok terbang
@@ -96,6 +102,7 @@ public class PandoraBlockPanel : PandoraPanel
     {
         public Transform t;
         public Transform slot;
+        public int cardSlot;                        // posisi kartu di barisan (0 = paling kiri)
         public Collider col;
         public MeshRenderer[] meshes;
         public Transform origParent;
@@ -141,6 +148,7 @@ public class PandoraBlockPanel : PandoraPanel
             State s = new State();
             s.t = b.block;
             s.slot = b.slot;
+            s.cardSlot = states.Count;
             s.meshes = b.block.GetComponentsInChildren<MeshRenderer>();
             s.origParent = b.block.parent;
             s.origLocalPos = b.block.localPosition;
@@ -200,6 +208,7 @@ public class PandoraBlockPanel : PandoraPanel
     public override void OnFocus()
     {
         focused = true;
+        AssignCardSlots();
         busy = false;
         pressing = false;
         selected = -1;
@@ -326,7 +335,7 @@ public class PandoraBlockPanel : PandoraPanel
                              + focusPoint.forward * cardDistance
                              + focusPoint.right * cardOffset.x
                              + focusPoint.up * cardOffset.y;
-            float x = (i - (states.Count - 1) * 0.5f) * spacing;
+            float x = (s.cardSlot - (states.Count - 1) * 0.5f) * spacing;
 
             pos = center + focusPoint.right * x;
             float mul = 1f;
@@ -356,6 +365,44 @@ public class PandoraBlockPanel : PandoraPanel
     Quaternion SlotRot(Transform hole)
     {
         return hole.rotation * Quaternion.Euler(slotRotationOffset);
+    }
+
+    // Menentukan posisi tiap kartu di barisan (hanya tampilan, tidak mengubah lubang tujuan balok)
+    void AssignCardSlots()
+    {
+        int n = states.Count;
+        int[] order = new int[n];
+        for (int i = 0; i < n; i++) order[i] = i;
+
+        if (shuffleCards)
+        {
+            for (int i = n - 1; i > 0; i--)
+            {
+                int j = Random.Range(0, i + 1);
+                int tmp = order[i];
+                order[i] = order[j];
+                order[j] = tmp;
+            }
+        }
+        else if (IsValidOrder(cardOrder, n))
+        {
+            for (int i = 0; i < n; i++) order[i] = cardOrder[i];
+        }
+
+        for (int i = 0; i < n; i++) states[i].cardSlot = order[i];
+    }
+
+    static bool IsValidOrder(int[] order, int n)
+    {
+        if (order == null || order.Length != n) return false;
+
+        bool[] seen = new bool[n];
+        foreach (int v in order)
+        {
+            if (v < 0 || v >= n || seen[v]) return false;
+            seen[v] = true;
+        }
+        return true;
     }
 
     void GetFaceAxes(out Vector3 a, out Vector3 u)

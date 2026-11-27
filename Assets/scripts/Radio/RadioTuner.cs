@@ -10,15 +10,15 @@ public class RadioTuner : MonoBehaviour
 
     [Header("Frekuensi (MHz)")]
     public float minMHz = 101.5f;        // frekuensi saat knob di posisi paling kiri
-    public float maxMHz = 110.75f;       // frekuensi saat knob di posisi paling kanan
+    public float maxMHz = 110.75f;      // frekuensi saat knob di posisi paling kanan
     public float startMHz = 101.5f;      // frekuensi saat game dimulai
     public float stepMHz = 0.25f;        // sekali tekan panah = geser segini
 
     [Header("Stasiun utama")]
     public float clearMHz = 104.25f;     // titik paling jelas
-    public float clearHalfWidth = 0.5f;  // masih jelas sampai sejauh ini ke atas dan ke bawah (MHz)
-    [Range(0f, 1f)] public float edgeClarity = 0.85f;  // kejernihan di tepi area jelas (di titik tengah = 1)
-    public float nearRange = 1.5f;       // di luar area jelas, suara memudar sejauh ini (MHz)
+    public float clearHalfWidth = 0f;    // 0 = harus tepat di clearMHz
+    [Range(0f, 1f)] public float edgeClarity = 1f;  // kejernihan di tepi area jelas (di titik tengah = 1)
+    public float nearRange = 0f;         // 0 = di luar area jelas langsung senyap
 
     [Header("Volume knob")]
     public float volumeStep = 0.05f;     // sekali tekan panah = volume berubah segini (0 sampai 1)
@@ -33,6 +33,13 @@ public class RadioTuner : MonoBehaviour
     public AudioSource settleSource;     // suara saat berhenti memutar (klip 0,6 detik)
     public AudioSource passwordSource;   // memutar klip-klip password satu per satu
 
+    [Header("Musik latar (BGM)")]
+    public AudioSource bgmSource;                  // musik yang looping terus
+    [Range(0f, 1f)] public float bgmNormalVolume = 0.5f;      // sebelum pemain memakai radio
+    [Range(0f, 1f)] public float bgmDuringRadioVolume = 0.1f; // saat zoom ke radio dan radio ON (pelan)
+    [Range(0f, 1f)] public float bgmAfterRadioVolume = 0.3f;  // setelah radio dimatikan (naik sedikit)
+    public float bgmFadeSpeed = 0.5f;              // kecepatan volume berubah (makin besar makin cepat)
+
     [Header("Suara saat memutar dan berhenti")]
     public float turnVolume = 0.8f;
     public float settleVolume = 0.8f;
@@ -41,17 +48,32 @@ public class RadioTuner : MonoBehaviour
     public float voiceFadeIn = 0.5f;     // lama suara masuk setelah suara berhenti selesai
 
     [Header("Kresek")]
+    public bool noiseOnlyAtStart = true; // true = kresek bunyi terus dari awal game sampai frekuensi diganti, lalu senyap
+    public float noiseAfterChange = 0f;  // level kresek setelah frekuensi diganti (dipakai kalau Noise Only At Start = true)
     public float noiseMax = 1f;          // paling keras (awal game dan setelah berhenti memutar)
-    public float noiseSettled = 0.6f;    // level kresek setelah lama kalau frekuensi masih jauh
+    public float noiseSettled = 0.6f;    // level kresek setelah lama kalau frekuensi masih jauh (dipakai kalau Noise Only At Start = false)
     public float noiseClear = 0f;        // level kresek kalau frekuensi pas (0 = berhenti total)
     public float noiseFadeTime = 4f;     // lama kresek mengecil kalau frekuensi masih jauh
     public float noiseClearFadeTime = 1.2f; // lama kresek mengecil kalau frekuensi pas
 
     [Header("Suara utama")]
-    public float voiceMax = 1f;          // volume saat frekuensi pas
-    public float voiceFar = 0.2f;        // volume saat masih jauh (tertutup kresek)
+    public float voiceMax = 1f;          // volume saat frekuensi pas (AudioSource.volume maksimal 1)
+    public float voiceFar = 0f;          // volume saat masih jauh (0 = senyap)
     public float cutoffMuffled = 500f;   // suara kabur (Hz)
     public float cutoffClear = 22000f;   // suara jernih (Hz)
+
+    [Header("Teks stasiun utama (click for text)")]
+    public bool textEnabled = true;
+    public float textDelay = 3f;                   // detik setelah frekuensi pas sampai tulisan muncul
+    public string promptLabel = "click for text";  // tulisan kecil di kanan layar
+    public Key toggleTextKey = Key.T;              // alternatif kalau kursor tidak bisa dipakai
+    [TextArea(8, 40)] public string stationText = "";   // teks panjang yang ditampilkan
+    [Range(0f, 1f)] public float textBgAlpha = 0.75f;   // transparansi latar gelap (0 = bening, 1 = pekat)
+    [Range(0.2f, 0.9f)] public float panelWidthRatio = 0.4f;   // lebar panel (porsi lebar layar)
+    [Range(0.2f, 0.95f)] public float panelHeightRatio = 0.75f; // tinggi panel (porsi tinggi layar)
+    public int textFontSize = 24;
+    public bool typewriterEffect = true;           // true = teks muncul seperti diketik
+    public float charsPerSecond = 40f;             // kecepatan mengetik (huruf per detik)
 
     [Header("Stasiun password (harus tepat)")]
     public bool passwordEnabled = true;
@@ -78,7 +100,7 @@ public class RadioTuner : MonoBehaviour
     public string passwordCode = "34511";          // kode yang harus dimasukkan lewat keycap (urut)
     public bool requireOffFrequency = false;       // true = radio juga harus berada di Off Frequency saat dimatikan
     public UnityEvent onPasswordAccepted;          // dipanggil sekali saat kode yang dimasukkan benar
-    public UnityEvent onPoweredOff;                // dipanggil saat radio benar-benar dimatikan (misal untuk membuat buku jatuh)
+    public UnityEvent onPoweredOff;                // dipanggil saat radio benar-benar dimatikan
 
     [Header("Keypad (tombol masuk)")]
     public RadioKeypad keypad;                     // kosongkan kalau RadioKeypad ada di objek yang sama
@@ -93,6 +115,8 @@ public class RadioTuner : MonoBehaviour
     [Header("Tampilan angka di layar")]
     public bool showDisplay = true;
     public int fontSize = 32;
+    public string tuneHint = "Use the LEFT and RIGHT arrow keys to tune the frequency";   // menggantikan tulisan VOLUME
+    public string dragHint = "Click and drag to rotate the radio";   // petunjuk kedua di bawahnya
 
     [Header("Debug (hanya untuk dilihat)")]
     public float debugFrequency;
@@ -108,14 +132,26 @@ public class RadioTuner : MonoBehaviour
     private bool hasTuned = false;
     private bool hasPwTuned = false;
     private bool wasTurning = false;
-    private bool wasInMainWindow = false;  // <-- BARU: untuk deteksi "baru saja masuk" area jelas
+    private bool wasInMainWindow = false;  // untuk deteksi "baru saja masuk" area jelas
+    private float inWindowTime = 0f;       // detik berada pas di stasiun utama (suara sudah terbuka)
+    private bool textAvailable = false;    // true = tulisan "click for text" boleh muncul
+    private bool textOpen = false;         // true = panel teks sedang terbuka
+    private Vector2 textScroll = Vector2.zero;
+    private bool usedRadio = false;        // true = radio sudah pernah dimatikan (untuk volume BGM)
+    private float typedChars = 0f;         // jumlah huruf yang sudah "diketik"
+    private bool typingStarted = false;    // true = animasi mengetik sudah pernah mulai
+    private bool typingConsumed = false;   // true = animasi sudah terpakai, teks langsung penuh
+    private Texture2D bgTex;
+    private float bgTexAlpha = -1f;
+    private float initialFreq = 0f;        // frekuensi saat game dimulai
+    private bool freqChanged = false;      // true = pemain sudah pernah mengganti frekuensi
     private string entered = "";           // angka yang sudah ditekan di keypad
     private bool passwordAccepted = false;   // true = kode sudah benar
 
     private float master = 0f;
     private float clarity = 0f;          // kejernihan stasiun utama (0 sampai 1)
     private float pwClarity = 0f;        // 1 kalau tepat di stasiun password
-    private float sinceStop = 1000f;     // detik sejak pemain berhenti memutar (besar = sudah lama)
+    private float sinceStop = 1000f;     // detik sejak pemain berhenti memutar
     private float noiseT = 0f;           // detik sejak kresek kembali di level paling keras
     private float gateSmooth = 1f;       // 0 = kresek dan suara dibungkam, 1 = terbuka
 
@@ -147,6 +183,14 @@ public class RadioTuner : MonoBehaviour
         }
 
         if (volumeKnob != null) master = volumeKnob.value;
+        if (frequencyKnob != null) initialFreq = CurrentFrequency();
+
+        if (bgmSource != null)
+        {
+            bgmSource.loop = true;
+            bgmSource.volume = bgmNormalVolume;
+            if (!bgmSource.isPlaying) bgmSource.Play();
+        }
 
         if (noiseSource != null) { noiseSource.loop = true; noiseSource.volume = noiseMax * master; noiseSource.Play(); }
         if (voiceSource != null) { voiceSource.loop = true; voiceSource.volume = 0f; voiceSource.Play(); }
@@ -268,7 +312,8 @@ public class RadioTuner : MonoBehaviour
         return settleDuration;
     }
 
-    // Kejernihan stasiun: 1 di titik tengah, turun sedikit sampai tepi area jelas, lalu memudar ke 0
+    // Kejernihan stasiun: 1 di titik tengah, turun sedikit sampai tepi area jelas.
+    // Di luar area jelas: memudar sejauh nearRange, atau langsung 0 kalau nearRange = 0.
     float StationClarity(float err)
     {
         if (err <= clearHalfWidth + 0.0001f)
@@ -277,7 +322,9 @@ public class RadioTuner : MonoBehaviour
             return Mathf.Lerp(1f, edgeClarity, t);
         }
 
-        float f = 1f - Mathf.Clamp01((err - clearHalfWidth) / Mathf.Max(nearRange, 0.0001f));
+        if (nearRange <= 0.0001f) return 0f;   // tidak ada pemudaran: di luar titik = senyap
+
+        float f = 1f - Mathf.Clamp01((err - clearHalfWidth) / nearRange);
         return edgeClarity * f * f;
     }
 
@@ -295,15 +342,13 @@ public class RadioTuner : MonoBehaviour
 
         // --- Posisi frekuensi ---
         float freq = CurrentFrequency();
+        if (!freqChanged && Mathf.Abs(freq - initialFreq) > 0.001f) freqChanged = true;
 
         float mainErr = Mathf.Abs(freq - clearMHz);
         bool inMainWindow = mainErr <= clearHalfWidth + 0.0001f;
         clarity = Mathf.Lerp(clarity, StationClarity(mainErr), dt * 10f);
 
-        // --- BARU: restart suara utama dari awal setiap kali BARU SAJA masuk ke area jelas ---
-        // Kalau sebelumnya di luar area jelas (atau radio baru menyala) lalu sekarang pas,
-        // klip akan diputar ulang dari detik 0. Kalau nanti digeser keluar lalu balik lagi,
-        // ini akan ke-trigger lagi karena wasInMainWindow sempat jadi false.
+        // Restart suara utama dari awal setiap kali BARU SAJA masuk ke area jelas
         if (isOn && inMainWindow && !wasInMainWindow && voiceSource != null)
         {
             voiceSource.Stop();
@@ -352,15 +397,44 @@ public class RadioTuner : MonoBehaviour
         float fadeTime = Mathf.Lerp(noiseFadeTime, noiseClearFadeTime, bestClarity);
         float noiseFade = Mathf.Clamp01(noiseT / Mathf.Max(fadeTime, 0.01f));
         float noiseLevel = Mathf.Lerp(noiseMax, settledNoise, noiseFade);
+        if (noiseOnlyAtStart)
+            noiseLevel = freqChanged ? noiseAfterChange : noiseMax;   // bunyi terus sampai frekuensi diganti
         if (noiseSource != null)
             noiseSource.volume = noiseLevel * gate * master;
 
-        // --- Suara utama (dibungkam kalau sedang di stasiun password) ---
+        // --- Suara utama: HANYA bunyi kalau berada di area jelas, dan dibungkam di stasiun password ---
         float voiceLevel = Mathf.Lerp(voiceFar, voiceMax, clarity) * (1f - pwClarity);
+        if (!inMainWindow) voiceLevel = 0f;   // potong langsung, tanpa "ekor" suara
         if (voiceSource != null)
             voiceSource.volume = voiceLevel * gate * master;
         if (voiceFilter != null)
             voiceFilter.cutoffFrequency = Mathf.Lerp(cutoffMuffled, cutoffClear, clarity * clarity);
+
+        // --- Teks "click for text": muncul beberapa detik setelah pas di stasiun utama ---
+        if (!isOn || !inMainWindow)
+        {
+            inWindowTime = 0f;
+            textOpen = false;
+            textScroll = Vector2.zero;
+            if (typingStarted) typingConsumed = true;   // frekuensi diganti: lain kali teks langsung penuh
+        }
+        else if (gate >= 1f)
+        {
+            inWindowTime += dt;
+        }
+        textAvailable = textEnabled && !string.IsNullOrEmpty(stationText) && inWindowTime >= textDelay;
+        if (!textAvailable) textOpen = false;
+
+        // Animasi mengetik: jalan hanya saat panel terbuka
+        if (textOpen && typewriterEffect && !typingConsumed)
+        {
+            typingStarted = true;
+            typedChars += charsPerSecond * dt;
+        }
+
+        if (textAvailable && IsZoomed() && Keyboard.current != null
+            && Keyboard.current[toggleTextKey].wasPressedThisFrame)
+            textOpen = !textOpen;
 
         // --- Stasiun password ---
         UpdatePassword(dt, exactPassword, gate >= 0.99f);
@@ -379,6 +453,17 @@ public class RadioTuner : MonoBehaviour
                 turnSource.Stop();
             }
             turnSource.volume = turnVolume * master;
+        }
+
+        // --- Musik latar: pelan saat memakai radio, naik sedikit setelah radio dimatikan ---
+        if (bgmSource != null)
+        {
+            if (!isOn) usedRadio = true;                       // radio sudah pernah dimatikan
+            float bgmTarget;
+            if (isOn && IsZoomed()) bgmTarget = bgmDuringRadioVolume;       // sedang memakai radio
+            else if (usedRadio) bgmTarget = bgmAfterRadioVolume;            // setelah radio dimatikan
+            else bgmTarget = bgmNormalVolume;                               // sebelum memakai radio
+            bgmSource.volume = Mathf.MoveTowards(bgmSource.volume, bgmTarget, bgmFadeSpeed * dt);
         }
 
         debugFrequency = freq;
@@ -501,6 +586,137 @@ public class RadioTuner : MonoBehaviour
         pwWait = 0f;
     }
 
+    // ---------- Teks "click for text" ----------
+
+    Texture2D DarkBg()
+    {
+        if (bgTex == null || !Mathf.Approximately(bgTexAlpha, textBgAlpha))
+        {
+            if (bgTex == null)
+            {
+                bgTex = new Texture2D(1, 1);
+                bgTex.wrapMode = TextureWrapMode.Repeat;
+            }
+            bgTex.SetPixel(0, 0, new Color(0f, 0f, 0f, textBgAlpha));
+            bgTex.Apply();
+            bgTexAlpha = textBgAlpha;
+        }
+        return bgTex;
+    }
+
+    void DrawTextPanel()
+    {
+        if (!textAvailable) return;
+
+        Texture2D bg = DarkBg();
+
+        if (!textOpen)
+        {
+            // Tulisan kecil di kanan layar
+            GUIStyle btn = new GUIStyle(GUI.skin.button);
+            btn.fontSize = Mathf.RoundToInt(textFontSize * 0.9f);
+            btn.normal.background = bg;
+            btn.hover.background = bg;
+            btn.active.background = bg;
+            btn.normal.textColor = new Color(1f, 1f, 1f, 0.85f);
+            btn.hover.textColor = Color.white;
+            btn.active.textColor = Color.white;
+
+            float bw = textFontSize * 9f;
+            float bh = textFontSize * 2f;
+            if (GUI.Button(new Rect(Screen.width - bw - 30, Screen.height * 0.5f - bh * 0.5f, bw, bh), promptLabel, btn))
+                textOpen = true;
+            return;
+        }
+
+        // Panel teks: latar gelap transparan, bisa di-scroll
+        float pw = Screen.width * panelWidthRatio;
+        float ph = Screen.height * panelHeightRatio;
+        Rect panel = new Rect(Screen.width - pw - 30, (Screen.height - ph) * 0.5f, pw, ph);
+
+        GUIStyle box = new GUIStyle(GUI.skin.box);
+        box.normal.background = bg;
+        GUI.Box(panel, GUIContent.none, box);
+
+        float pad = 20f;
+        float closeH = textFontSize * 1.8f;
+
+        GUIStyle closeStyle = new GUIStyle(GUI.skin.button);
+        closeStyle.fontSize = Mathf.RoundToInt(textFontSize * 0.8f);
+        if (GUI.Button(new Rect(panel.xMax - pad - closeH * 3f, panel.y + pad * 0.5f, closeH * 3f, closeH), "tutup", closeStyle))
+            textOpen = false;
+
+        GUIStyle body = new GUIStyle(GUI.skin.label);
+        body.fontSize = textFontSize;
+        body.wordWrap = true;
+        body.richText = true;
+        body.normal.textColor = Color.white;
+
+        Rect view = new Rect(panel.x + pad, panel.y + pad + closeH, panel.width - pad * 2f, panel.height - pad * 2f - closeH);
+        float contentW = view.width - 24f;   // sisakan ruang untuk scrollbar
+        // Tinggi dihitung dari teks penuh supaya tata letak tidak lompat-lompat saat mengetik
+        float contentH = body.CalcHeight(new GUIContent(stationText), contentW);
+
+        string shown = stationText;
+        bool typing = typewriterEffect && !typingConsumed && typedChars < VisibleLength(stationText);
+        if (typing)
+        {
+            shown = TypedSubstring(stationText, Mathf.FloorToInt(typedChars));
+
+            // Gulung otomatis ke bawah kalau teks yang diketik sudah melewati batas panel
+            float shownH = body.CalcHeight(new GUIContent(shown), contentW);
+            if (shownH > view.height + textScroll.y) textScroll.y = shownH - view.height;
+        }
+
+        textScroll = GUI.BeginScrollView(view, textScroll, new Rect(0, 0, contentW, contentH));
+        GUI.Label(new Rect(0, 0, contentW, contentH), shown, body);
+        GUI.EndScrollView();
+    }
+
+    // Jumlah huruf yang terlihat (tag rich text seperti <b> tidak dihitung)
+    int VisibleLength(string s)
+    {
+        int n = 0;
+        int i = 0;
+        while (i < s.Length)
+        {
+            if (s[i] == '<')
+            {
+                int end = s.IndexOf('>', i);
+                if (end > i) { i = end + 1; continue; }
+            }
+            n++;
+            i++;
+        }
+        return n;
+    }
+
+    // Ambil teks sampai 'count' huruf terlihat, tag rich text ikut dibawa utuh
+    string TypedSubstring(string s, int count)
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        int shownCount = 0;
+        int i = 0;
+        while (i < s.Length)
+        {
+            if (s[i] == '<')
+            {
+                int end = s.IndexOf('>', i);
+                if (end > i)
+                {
+                    sb.Append(s, i, end - i + 1);
+                    i = end + 1;
+                    continue;
+                }
+            }
+            if (shownCount >= count) break;
+            sb.Append(s[i]);
+            shownCount++;
+            i++;
+        }
+        return sb.ToString();
+    }
+
     // ---------- Tampilan di layar ----------
 
     void OnGUI()
@@ -509,7 +725,6 @@ public class RadioTuner : MonoBehaviour
         if (!IsZoomed()) return;
 
         float freq = CurrentFrequency();
-        int vol = Mathf.RoundToInt(volumeKnob.value * 100f);
 
         GUIStyle style = new GUIStyle(GUI.skin.label);
         style.fontSize = fontSize;
@@ -518,35 +733,49 @@ public class RadioTuner : MonoBehaviour
 
         float h = fontSize * 1.6f;
 
+        DrawTextPanel();
+
         if (Time.time < messageUntil)
         {
             GUIStyle msgStyle = new GUIStyle(style);
             msgStyle.fontSize = Mathf.RoundToInt(fontSize * 0.8f);
             msgStyle.normal.textColor = new Color(1f, 0.9f, 0.4f);
-            GUI.Label(new Rect(40, Screen.height - h * 5 - 40, 900, h), message, msgStyle);
+            GUI.Label(new Rect(40, Screen.height - h * 6 - 40, 900, h), message, msgStyle);
         }
 
         if (requirePasswordToTurnOff && (entered.Length > 0 || passwordAccepted))
         {
             GUIStyle codeStyle = new GUIStyle(style);
             codeStyle.normal.textColor = passwordAccepted ? new Color(0.3f, 1f, 0.4f) : new Color(1f, 0.9f, 0.4f);
-            GUI.Label(new Rect(40, Screen.height - h * 6 - 40, 900, h), "KODE   " + CodeDisplay(), codeStyle);
+            GUI.Label(new Rect(40, Screen.height - h * 7 - 40, 900, h), "KODE   " + CodeDisplay(), codeStyle);
         }
 
         if (showExitHint)
         {
+            string exitText = isOn ? "Matikan radio untuk keluar" : "Tekan E untuk keluar";
+
             GUIStyle hintStyle = new GUIStyle(style);
-            hintStyle.fontSize = Mathf.RoundToInt(fontSize * 0.7f);
-            hintStyle.normal.textColor = new Color(1f, 1f, 1f, 0.7f);
-            GUI.Label(new Rect(40, Screen.height - h * 4 - 40, 900, h),
-                isOn ? "Matikan radio untuk keluar" : "Tekan E untuk keluar", hintStyle);
+            hintStyle.fontSize = Mathf.RoundToInt(fontSize * 0.8f);
+            hintStyle.normal.textColor = isOn ? new Color(1f, 0.9f, 0.4f) : Color.white;   // kuning = menonjol
+
+            // Latar hitam transparan di belakang tulisan supaya mudah dibaca
+            Vector2 sz = hintStyle.CalcSize(new GUIContent(exitText));
+            float padX = 16f, padY = 6f;
+            float rowY = Screen.height - h * 5 - 40;
+            Rect hintBox = new Rect(40, rowY + (h - sz.y) * 0.5f - padY, sz.x + padX * 2f, sz.y + padY * 2f);
+
+            GUIStyle hintBg = new GUIStyle(GUI.skin.box);
+            hintBg.normal.background = DarkBg();
+            GUI.Box(hintBox, GUIContent.none, hintBg);
+            GUI.Label(new Rect(hintBox.x + padX, hintBox.y + padY, sz.x, sz.y), exitText, hintStyle);
         }
 
         GUIStyle powerStyle = new GUIStyle(style);
         powerStyle.normal.textColor = isOn ? new Color(0.3f, 1f, 0.4f) : new Color(1f, 0.35f, 0.3f);
-        GUI.Label(new Rect(40, Screen.height - h * 3 - 40, 700, h), isOn ? "RADIO   ON" : "RADIO   OFF", powerStyle);
+        GUI.Label(new Rect(40, Screen.height - h * 4 - 40, 700, h), isOn ? "RADIO   ON" : "RADIO   OFF", powerStyle);
 
-        GUI.Label(new Rect(40, Screen.height - h * 2 - 40, 700, h), "FREKUENSI   " + freq.ToString("0.00") + " MHz", style);
-        GUI.Label(new Rect(40, Screen.height - h - 40, 700, h), "VOLUME   " + vol, style);
+        GUI.Label(new Rect(40, Screen.height - h * 3 - 40, 700, h), "FREKUENSI   " + freq.ToString("0.00") + " MHz", style);
+        GUI.Label(new Rect(40, Screen.height - h * 2 - 40, 1400, h), tuneHint, style);
+        GUI.Label(new Rect(40, Screen.height - h - 40, 1400, h), dragHint, style);
     }
 }

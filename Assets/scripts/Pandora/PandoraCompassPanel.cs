@@ -6,8 +6,8 @@ using TMPro;
 // - Selalu bisa dimainkan (tidak terkunci).
 // - Tahan klik lalu gerakkan mouse melingkar mengelilingi pusat kompas, jarum mengikuti mouse.
 // - Saat jarum digerakkan, tulisan derajat muncul di sebelah kompas (0-360, searah jarum jam dari posisi awal).
-// - Benar atau salah HANYA diberi tahu kalau section lain sudah selesai:
-//   jarum diam selama Confirm Delay (default 1 detik) -> merah = salah, hijau = benar.
+// - Jarum diam selama Confirm Delay (default 1 detik) -> merah = salah, hijau = benar.
+//   Kalau "Require Others Solved" dicentang, hijau/merah baru muncul setelah section lain selesai.
 // Sumbu putar otomatis = arah pandang Focus Point (tegak lurus permukaan kompas).
 public class PandoraCompassPanel : PandoraPanel
 {
@@ -32,6 +32,8 @@ public class PandoraCompassPanel : PandoraPanel
     public float tolerance = 1f;
     [Tooltip("Jarum harus diam selama ini (detik) baru dicek benar atau salah.")]
     public float confirmDelay = 1f;
+    [Tooltip("true = hijau/merah baru muncul setelah section lain selesai (perilaku lama). false = hijau/merah langsung muncul.")]
+    public bool requireOthersSolved = false;
 
     [Header("Tulisan derajat")]
     public TextMeshProUGUI degreeText;              // TMP di Canvas, misal "135°"
@@ -199,8 +201,8 @@ public class PandoraCompassPanel : PandoraPanel
 
     void Evaluate()
     {
-        // Section lain belum selesai: pemain tidak boleh tahu benar atau salah
-        if (owner != null && !owner.OthersSolved(this)) return;
+        // Perilaku lama (opsional): hijau/merah ditahan sampai section lain selesai
+        if (requireOthersSolved && owner != null && !owner.OthersSolved(this)) return;
 
         float diff = Mathf.Abs(Mathf.DeltaAngle(DisplayDegrees(), targetDegrees));
 

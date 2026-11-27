@@ -274,6 +274,7 @@ MonoBehaviour:
   targetDegrees: 122
   tolerance: 1
   confirmDelay: 1
+  requireOthersSolved: 0
   degreeText: {fileID: 307713188}
   textAnchor: {fileID: 0}
   textOffsetPixels: {x: 0, y: 0}
@@ -5511,16 +5512,16 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 451118821}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: -1}
-  m_LocalPosition: {x: 0, y: 2.6, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: -7.1, y: 3.994, z: 2.42}
+  m_LocalScale: {x: 0.5000001, y: 0.5, z: 0.5000001}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1676346623}
   - {fileID: 970538496}
   - {fileID: 1289516428}
   - {fileID: 1174746070}
-  m_Father: {fileID: 543450652267245396}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &452093051
 GameObject:
@@ -8982,7 +8983,7 @@ MonoBehaviour:
   - But what language is this...?
   playOnEnter: 0
   triggerTag: Player
-  playOnce: 1
+  playOnce: 0
   delay: 0
 --- !u!4 &799132927
 Transform:
@@ -9544,7 +9545,7 @@ MonoBehaviour:
   - 'Hint: Click on a section to zoom in and solve the puzzle.'
   playOnEnter: 0
   triggerTag: Player
-  playOnce: 1
+  playOnce: 0
   delay: 0
 --- !u!65 &845150972
 BoxCollider:
@@ -10526,6 +10527,135 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 66153196}
   m_SourcePrefab: {fileID: 100100000, guid: c7ab97a0a320f87419b57fa6c50a0be0, type: 3}
+--- !u!1 &958843531
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 958843533}
+  - component: {fileID: 958843532}
+  m_Layer: 0
+  m_Name: BGM
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!82 &958843532
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 958843531}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 570bfc217a9e26040acc28602a16df26, type: 3}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 1
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!4 &958843533
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 958843531}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &969360483
 GameObject:
   m_ObjectHideFlags: 0
@@ -10709,7 +10839,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 997349533}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c0662663772eb9a439218c90448baa08, type: 3}
   m_Name: 
@@ -10748,7 +10878,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 997349533}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eaf5ce9ee486ae7469ce34904eb132a0, type: 3}
   m_Name: 
@@ -11736,7 +11866,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -3091516513361734271, guid: 56fc2d70ac76f2140b54592d467a5679, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.0008
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -3091516513361734271, guid: 56fc2d70ac76f2140b54592d467a5679, type: 3}
       propertyPath: m_LocalPosition.y
@@ -12732,6 +12862,8 @@ MonoBehaviour:
   faceLocalUp: {x: 0, y: 0, z: 1}
   cardRotationOffset: {x: 50, y: 0, z: 0}
   slotRotationOffset: {x: 0, y: 0, z: 0}
+  shuffleCards: 1
+  cardOrder: 03000000010000000200000004000000
   flySpeed: 7
   cameraDelay: 0.35
   stagger: 0.07
@@ -13018,7 +13150,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1262084176}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c0662663772eb9a439218c90448baa08, type: 3}
   m_Name: 
@@ -13030,7 +13162,7 @@ MonoBehaviour:
   - 'ugh... what is that noice? t''s so loud... what is going on over there? its
     sounded from that room '
   - 'i think i have to check it out '
-  playOnEnter: 1
+  playOnEnter: 0
   triggerTag: Player
   playOnce: 1
   delay: 0
@@ -13041,14 +13173,19 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1262084176}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eaf5ce9ee486ae7469ce34904eb132a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonologTrigger
   lines:
-  - 
-  playOnEnter: 0
+  - Whoa... isn't that... Pandora?
+  - This has to be it. Just like in the movies.
+  - Am I supposed to solve this?..
+  - 'ugh... what is that noice? it''s so loud... what is going on over there? its
+    sounded from that room '
+  - i think i have to check it out
+  playOnEnter: 1
   triggerTag: Player
   playOnce: 1
   delay: 0
@@ -15858,7 +15995,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MonologTrigger
   lines:
   - Monocle 1 found.
-  - She says it makes words she couldn't read before, readable.
+  - It's my mom's monocle
   - She says it makes words she couldn't read before, readable.
   playOnEnter: 0
   triggerTag: Player
@@ -16294,7 +16431,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1768573452}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dfdda087ee869384b823a5ff7b7074fc, type: 3}
   m_Name: 
@@ -16395,13 +16532,13 @@ MonoBehaviour:
   volumeKnob: {fileID: 1768573457}
   frequencyKnob: {fileID: 2055549850}
   minMHz: 101.5
-  maxMHz: 110.75
+  maxMHz: 115
   startMHz: 101.5
   stepMHz: 0.25
   clearMHz: 104.25
   clearHalfWidth: 0
-  edgeClarity: 0.85
-  nearRange: 1.5
+  edgeClarity: 1
+  nearRange: 0
   volumeStep: 0.05
   forceStartVolume: 1
   startVolume: 1
@@ -16411,12 +16548,19 @@ MonoBehaviour:
   turnSource: {fileID: 1624429370}
   settleSource: {fileID: 0}
   passwordSource: {fileID: 1539330792}
+  bgmSource: {fileID: 958843532}
+  bgmNormalVolume: 0.5
+  bgmDuringRadioVolume: 0.137
+  bgmAfterRadioVolume: 0.632
+  bgmFadeSpeed: 0.5
   turnVolume: 0.8
   settleVolume: 0.8
   stopDelay: 0.25
   settleDuration: 0.6
   voiceFadeIn: 0.5
-  noiseMax: 2
+  noiseOnlyAtStart: 0
+  noiseAfterChange: 0
+  noiseMax: 1
   noiseSettled: 0.6
   noiseClear: 0
   noiseFadeTime: 4
@@ -16425,6 +16569,33 @@ MonoBehaviour:
   voiceFar: 0
   cutoffMuffled: 500
   cutoffClear: 22000
+  textEnabled: 1
+  textDelay: 5
+  promptLabel: click for text
+  toggleTextKey: 34
+  stationText: 'Good evening, ladies and gentlemen!
+
+
+    A distinguished CERN professor
+    has recently unveiled a fascinating book exploring the theory of the fifth dimension.
+
+
+    Praised
+    for making complex physics accessible to everyone, this modest midnight-blue
+    volume is certainly worth a read.
+
+
+    Who knows what mysteries lie beyond the
+    dimensions we know?
+
+
+    Until next time, stay curious!'
+  textBgAlpha: 0.75
+  panelWidthRatio: 0.4
+  panelHeightRatio: 0.75
+  textFontSize: 24
+  typewriterEffect: 1
+  charsPerSecond: 20
   passwordEnabled: 1
   passwordMHz: 110.75
   passwordWindow: 0.05
@@ -16464,7 +16635,9 @@ MonoBehaviour:
   canTurnOnAgain: 1
   enterKeyAlsoPresses: 1
   showDisplay: 1
-  fontSize: 32
+  fontSize: 16
+  tuneHint: Use the LEFT and RIGHT arrow keys to tune the frequency
+  dragHint: Click and drag to rotate the radio
   debugFrequency: 0
   debugClarity: 0
   debugPasswordClarity: 0
@@ -16539,8 +16712,8 @@ MonoBehaviour:
   onExit:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 997349534}
-        m_TargetAssemblyTypeName: MonologFreezeTrigger, Assembly-CSharp
+      - m_Target: {fileID: 997349536}
+        m_TargetAssemblyTypeName: MonologTrigger, Assembly-CSharp
         m_MethodName: Play
         m_Mode: 1
         m_Arguments:
@@ -16553,19 +16726,7 @@ MonoBehaviour:
         m_CallState: 2
   onBlockedExit:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 997349534}
-        m_TargetAssemblyTypeName: MonologFreezeTrigger, Assembly-CSharp
-        m_MethodName: Play
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   onBookOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -16605,7 +16766,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RadioKeypad
   tuner: {fileID: 0}
   zoomView: {fileID: 1773374744}
-  cover: {fileID: 0}
+  cover: {fileID: 708534158}
   keyMap:
   - keycap: {fileID: 300130663}
     key: 1
@@ -16626,20 +16787,24 @@ MonoBehaviour:
   - keycap: {fileID: 1186663594}
     key: 9
   - keycap: {fileID: 1762670657}
-    key: 0
+    key: '*'
   - keycap: {fileID: 1482464450}
     key: 0
   - keycap: {fileID: 45326725}
-    key: 0
+    key: '#'
   keycapNamePrefix: Keycaps
   keys: 34511
   directionReference: {fileID: 0}
-  flipDirection: 0
+  flipDirection: 1
   fallbackDirection: {x: 0, y: -1, z: 0}
   pressFraction: 0.5
   pressSpeed: 25
-  latchKeys: 1
+  latchKeys: 0
   momentaryKeys: '*#'
+  pressSound: {fileID: 8300000, guid: 89b117c3e53502a4295cd7fb426a7f17, type: 3}
+  pressSoundVolume: 1
+  pitchVariation: 0.05
+  soundSource: {fileID: 0}
 --- !u!4 &1787386795 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7531192236746674002, guid: de71cd2f8f05118418bc141b2367ad97, type: 3}
@@ -16760,7 +16925,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -22.7
+      value: 6.906
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalPosition.y
@@ -16768,11 +16933,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 9.783
+      value: 2.67
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalRotation.x
@@ -16780,7 +16945,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalRotation.z
@@ -16792,7 +16957,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c0dc17328368cc54fbf2d4322b22f649, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -19044,7 +19209,6 @@ Transform:
   - {fileID: 1257140686}
   - {fileID: 27078228}
   - {fileID: 1244739509}
-  - {fileID: 451118822}
   - {fileID: 2123138752}
   - {fileID: 782398726}
   - {fileID: 265124564}
@@ -19374,6 +19538,7 @@ MonoBehaviour:
   buttonFadeIn: 1
   homeFadeOut: 1.8
   homeFadeIn: 1.5
+  nextButtonDelay: 10
   buttonFontSize: 40
   buttonSize: {x: 320, y: 90}
   buttonMargin: {x: 50, y: 40}
@@ -22312,6 +22477,7 @@ MeshFilter:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 958843533}
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 724281070}
@@ -22347,4 +22513,5 @@ SceneRoots:
   - {fileID: 4083501150130852114}
   - {fileID: 5680519943086442630}
   - {fileID: 7967766327176999775}
+  - {fileID: 451118822}
   - {fileID: 543450652267245396}
